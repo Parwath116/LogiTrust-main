@@ -1,0 +1,77 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "C:\\Users\\Yashas\\Downloads\\logitrust_fullstack\\logitrust\\contracts\\contracts\\ShipmentRegistry.sol": {
+      "lastModificationDate": 1785135438152,
+      "contentHash": "019bc58377aa39b2578fd673808a4e45",
+      "sourceName": "contracts/ShipmentRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "ShipmentRegistry"
+      ]
+    },
+    "C:\\Users\\Yashas\\Downloads\\logitrust_fullstack\\logitrust\\contracts\\contracts\\SmartEscrow.sol": {
+      "lastModificationDate": 1784873953006,
+      "contentHash": "cc648ee1b474db9da353f8ee2a8a633c",
+      "sourceName": "contracts/SmartEscrow.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "SmartEscrow"
+      ]
+    }
+  }
+}

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"/><title>Signing you in…</title></head>
+<body style="background:#06090f;color:#8ba8cc;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh">
+  <p>Signing you in…</p>
+  <script>
+    // Google OAuth redirect lands here with #token=<jwt>
+    const hash = window.location.hash;
+    const token = hash.startsWith("#token=") ? hash.replace("#token=", "") : null;
+    if (token) {
+      localStorage.setItem("logitrust_jwt", token);
+      window.location.href = "dashboard.html";
+    } else {
+      document.body.innerText = "Sign-in failed. Please try again.";
+    }
+  </script>
+</body>
+</html>

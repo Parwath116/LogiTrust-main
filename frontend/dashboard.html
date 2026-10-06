@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>LogiTrust — Smart Supply Chain</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<style>
+:root{
+  --bg:#06090f;
+  --bg2:#0c1119;
+  --bg3:#111a27;
+  --bg4:#162033;
+  --border:rgba(99,179,255,0.10);
+  --border2:rgba(99,179,255,0.20);
+  --border3:rgba(99,179,255,0.35);
+  --accent:#3B9EFF;
+  --accent2:#5BB3FF;
+  --accent-dim:rgba(59,158,255,0.15);
+  --accent-dim2:rgba(59,158,255,0.08);
+  --green:#22d77a;
+  --green-dim:rgba(34,215,122,0.12);
+  --amber:#f5a623;
+  --amber-dim:rgba(245,166,35,0.12);
+  --red:#ff5252;
+  --red-dim:rgba(255,82,82,0.12);
+  --text:#e8f0fe;
+  --text2:#8ba8cc;
+  --text3:#4d6580;
+  --mono:'DM Mono',monospace;
+  --sans:'DM Sans',sans-serif;
+  --display:'Syne',sans-serif;
+  --radius:12px;
+  --radius-lg:18px;
+  --glow:0 0 40px rgba(59,158,255,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;cursor:default}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
+
+/* PAGE SYSTEM */
+.page{display:none;min-height:100vh;flex-direction:column}
+.page.active{display:flex}
+
+/* ─── SPLASH ─── */
+#page-splash{align-items:center;justify-content:center;background:var(--bg);position:relative;overflow:hidden}
+.splash-grid{position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:48px 48px;animation:gridpan 30s linear infinite;opacity:.6}
+@keyframes gridpan{from{background-position:0 0}to{background-position:48px 48px}}
+.splash-glow{position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(59,158,255,0.07) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);animation:breathe 6s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.1)}}
+.splash-content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:0}
+.splash-logo-ring{width:90px;height:90px;border:1.5px solid var(--border3);border-radius:24px;display:flex;align-items:center;justify-content:center;background:var(--bg2);margin-bottom:28px;position:relative;animation:logobob 3s ease-in-out infinite;box-shadow:0 0 0 8px var(--accent-dim2),0 0 60px rgba(59,158,255,0.1)}
+@keyframes logobob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.splash-wordmark{font-family:var(--display);font-size:52px;font-weight:800;color:var(--text);letter-spacing:-2px;margin-bottom:14px}
+.splash-wordmark span{color:var(--accent)}
+.splash-tagline{font-size:14px;color:var(--text2);text-align:center;max-width:360px;line-height:1.8;margin-bottom:40px;font-weight:300}
+.splash-enter{display:flex;align-items:center;gap:10px;background:var(--accent);color:#fff;border:none;font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:.5px;padding:14px 32px;border-radius:100px;cursor:pointer;transition:all .25s;box-shadow:0 8px 32px rgba(59,158,255,0.3)}
+.splash-enter:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(59,158,255,0.45);background:#5BB3FF}
+.splash-stats{position:absolute;bottom:48px;display:flex;gap:48px}
+.ss{text-align:center}
+.ss-n{font-family:var(--display);font-size:28px;font-weight:800;color:var(--accent);display:block}
+.ss-l{font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+.splash-corner{position:absolute;bottom:0;right:0;width:240px;height:240px;background:radial-gradient(circle at bottom right,rgba(59,158,255,0.06),transparent 70%)}
+
+/* ─── ROLE SELECTOR ─── */
+#page-roles{align-items:center;justify-content:center;background:var(--bg);padding:40px 24px;position:relative;overflow:hidden}
+#page-roles::before{content:'';position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:48px 48px;opacity:.4}
+.roles-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;width:100%;max-width:860px}
+.roles-wordmark{font-family:var(--display);font-size:32px;font-weight:800;color:var(--text);letter-spacing:-1px;margin-bottom:6px}
+.roles-wordmark span{color:var(--accent)}
+.roles-sub{font-size:13px;color:var(--text3);margin-bottom:36px}
+.roles-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;width:100%}
+.role-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px 24px;cursor:pointer;transition:all .3s;text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;position:relative;overflow:hidden}
+.role-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,var(--accent-dim2),transparent 60%);opacity:0;transition:.3s}
+.role-card:hover{border-color:var(--border3);transform:translateY(-4px);box-shadow:0 20px 60px rgba(0,0,0,0.4),0 0 0 1px var(--border2)}
+.role-card:hover::before{opacity:1}
+.role-icon-wrap{width:60px;height:60px;border-radius:16px;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;background:var(--bg3)}
+.role-name{font-family:var(--display);font-size:18px;font-weight:700;color:var(--text)}
+.role-desc{font-size:12px;color:var(--text2);line-height:1.7;font-weight:300}
+.role-badge{font-size:10px;font-weight:600;padding:5px 14px;border-radius:100px;letter-spacing:.5px;text-transform:uppercase}
+.rb-admin{background:rgba(59,158,255,0.12);color:var(--accent);border:1px solid rgba(59,158,255,0.25)}
+.rb-shipper{background:rgba(34,215,122,0.12);color:var(--green);border:1px solid rgba(34,215,122,0.25)}
+.rb-receiver{background:rgba(245,166,35,0.12);color:var(--amber);border:1px solid rgba(245,166,35,0.25)}
+
+/* ─── BACK PILL ─── */
+.back-pill{display:inline-flex;align-items:center;gap:8px;font-size:11px;color:var(--text2);border:1px solid var(--border);border-radius:100px;padding:7px 16px;cursor:pointer;background:var(--bg2);margin-bottom:20px;transition:all .2s;font-family:var(--sans);letter-spacing:.3px;align-self:flex-start}
+.back-pill:hover{border-color:var(--border3);color:var(--text);background:var(--bg3)}
+
+/* ─── DASHBOARD WRAPPER ─── */
+.db-wrap{background:var(--bg);padding:20px 24px}
+
+/* ─── TOP BAR ─── */
+.topbar{display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px 20px;margin-bottom:20px}
+.db-brand{display:flex;align-items:center;gap:12px}
+.brand-icon{width:36px;height:36px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.brand-name{font-family:var(--display);font-size:16px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+.brand-sub{font-size:10px;color:var(--text3);margin-top:1px;letter-spacing:.5px;text-transform:uppercase}
+.topright{display:flex;align-items:center;gap:10px}
+.badge-live{display:flex;align-items:center;gap:6px;background:var(--green-dim);border:1px solid rgba(34,215,122,0.25);border-radius:100px;padding:6px 14px;font-size:11px;font-weight:600;color:var(--green);letter-spacing:.3px}
+.dot-live{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,215,122,0.6)}70%{box-shadow:0 0 0 6px rgba(34,215,122,0)}}
+.user-chip{display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:100px;padding:5px 14px 5px 6px;font-size:12px;color:var(--text2);background:var(--bg3)}
+.av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;letter-spacing:.5px}
+.av-admin{background:rgba(59,158,255,0.2);color:var(--accent)}
+.av-shipper{background:rgba(34,215,122,0.2);color:var(--green)}
+.av-receiver{background:rgba(245,166,35,0.2);color:var(--amber)}
+
+/* ─── SECTION LABEL ─── */
+.sec-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+
+/* ─── METRICS STRIP ─── */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.mc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:relative;overflow:hidden;transition:border-color .2s}
+.mc:hover{border-color:var(--border2)}
+.mc::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:2px 2px 0 0}
+.mc.c-blue::after{background:var(--accent)}
+.mc.c-green::after{background:var(--green)}
+.mc.c-amber::after{background:var(--amber)}
+.mc.c-red::after{background:var(--red)}
+.mc-lbl{font-size:11px;color:var(--text3);margin-bottom:8px;letter-spacing:.3px}
+.mc-val{font-family:var(--display);font-size:28px;font-weight:800;color:var(--text);line-height:1;margin-bottom:6px}
+.mbadge{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:3px 10px;border-radius:100px;letter-spacing:.3px}
+.b-ok{background:var(--green-dim);color:var(--green);border:1px solid rgba(34,215,122,0.2)}
+.b-warn{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,0.2)}
+.b-info{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(59,158,255,0.2)}
+.b-danger{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,82,82,0.2)}
+
+/* ─── GRID LAYOUTS ─── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.full-col{margin-bottom:16px}
+
+/* ─── CARD ─── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;transition:border-color .2s}
+.card-title{font-family:var(--display);font-size:13px;font-weight:700;color:var(--text);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;letter-spacing:-.2px}
+
+/* ─── SCROLLABLE LIST ─── */
+.scrollable-list {
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+/* ─── SHIPMENT ROWS ─── */
+.srow{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);font-size:13px;transition:background .15s;border-radius:4px;cursor:default}
+.srow:last-child{border-bottom:none;padding-bottom:0}
+.sid{font-family:var(--display);font-weight:700;color:var(--text);font-size:13px}
+.sroute{font-size:11px;color:var(--text3);margin-top:3px}
+.pill{font-size:10px;font-weight:600;padding:5px 12px;border-radius:100px;letter-spacing:.4px;text-transform:uppercase}
+.p-tr{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(59,158,255,0.2)}
+.p-dl{background:var(--green-dim);color:var(--green);border:1px solid rgba(34,215,122,0.2)}
+.p-ar{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,82,82,0.2)}
+.p-pd{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,0.2)}
+
+/* ─── SENSOR BLOCK ─── */
+.sensor-block{display:flex;flex-direction:column;gap:14px}
+.sensor-row{display:flex;align-items:center;justify-content:space-between}
+.sn-name{font-size:12px;color:var(--text3)}
+.sn-val{font-family:var(--display);font-size:20px;font-weight:800;color:var(--text)}
+.sn-unit{font-size:11px;color:var(--text3);margin-left:2px}
+.bar-track{height:4px;background:var(--bg4);border-radius:2px;margin-top:6px;overflow:hidden}
+.bar-fill{height:100%;border-radius:2px;transition:width .6s ease}
+.bar-ok{background:var(--green)}
+.bar-warn{background:var(--amber)}
+.bar-hot{background:var(--red)}
+
+/* ─── MAP ─── */
+.map-div{width:100%;height:280px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);overflow:hidden}
+
+/* ─── AI RISK ─── */
+.sp-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.sp-item:last-child{border-bottom:none}
+.rb-wrap{width:90px;height:4px;background:var(--bg4);border-radius:2px;overflow:hidden}
+.rb-fill{height:100%;border-radius:2px}
+
+/* ─── EVENTS LOG ─── */
+.crow{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.crow:last-child{border-bottom:none}
+.cdot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;box-shadow:0 0 8px currentColor}
+.cev{font-size:12px;color:var(--text);font-weight:500}
+.chash{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:3px}
+.ctime{font-size:10px;color:var(--text3);margin-top:2px}
+
+/* ─── ESCROW ─── */
+.erow{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px}
+.erow:last-child{border-bottom:none}
+.eamt{font-family:var(--display);font-weight:800;font-size:16px;color:var(--text);margin-bottom:3px}
+
+/* ─── ACTION BUTTONS ─── */
+.action-btn{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:7px 14px;border-radius:100px;cursor:pointer;border:none;transition:all .2s;letter-spacing:.3px}
+.btn-approve{background:var(--green-dim);color:var(--green);border:1px solid rgba(34,215,122,0.25)}
+.btn-approve:hover{background:rgba(34,215,122,0.2)}
+.btn-dispute{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,82,82,0.25)}
+.btn-dispute:hover{background:rgba(255,82,82,0.2)}
+.btn-add{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--bg);background:var(--accent);border:none;border-radius:100px;padding:7px 16px;cursor:pointer;transition:all .2s;letter-spacing:.3px;font-family:var(--display)}
+.btn-add:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 16px rgba(59,158,255,0.3)}
+
+/* ─── RBAC TABLE ─── */
+.rbac-table{width:100%;font-size:12px;border-collapse:collapse}
+.rbac-table th{font-size:10px;color:var(--text3);font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:6px 0;text-align:center}
+.rbac-table th:first-child{text-align:left}
+.rbac-table td{padding:8px 0;border-top:1px solid var(--border);color:var(--text2);text-align:center;font-size:12px}
+.rbac-table td:first-child{text-align:left;color:var(--text);font-weight:500}
+
+/* ─── FOOTER BAR ─── */
+.footer-bar{display:flex;align-items:center;justify-content:space-between;padding-top:16px;border-top:1px solid var(--border);font-size:10px;color:var(--text3);margin-top:8px;letter-spacing:.3px}
+.footer-bar span b{color:var(--text2);font-weight:500}
+
+/* ─── MODAL ─── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:999;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:28px;width:100%;max-width:540px;max-height:92vh;overflow-y:auto;box-shadow:0 40px 120px rgba(0,0,0,0.6),0 0 60px rgba(59,158,255,0.06)}
+.modal-title{font-family:var(--display);font-size:17px;font-weight:800;color:var(--text);margin-bottom:22px;display:flex;align-items:center;justify-content:space-between;letter-spacing:-.3px}
+.modal-close{cursor:pointer;font-size:18px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;transition:.2s}
+.modal-close:hover{color:var(--text);border-color:var(--border3)}
+.form-row{margin-bottom:14px}
+.form-label{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;display:block;letter-spacing:.5px;text-transform:uppercase}
+.form-input,.form-select{width:100%;padding:10px 14px;border:1px solid var(--border2);border-radius:var(--radius);font-size:13px;color:var(--text);background:var(--bg3);outline:none;font-family:var(--sans);transition:border-color .2s}
+.form-select option{background:var(--bg3);color:var(--text)}
+.form-input:focus,.form-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim2)}
+.form-input::placeholder{color:var(--text3)}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.btn-primary{background:var(--accent);color:#fff;border:none;border-radius:var(--radius);padding:13px 24px;font-size:13px;font-weight:700;cursor:pointer;width:100%;transition:all .2s;font-family:var(--display);letter-spacing:.3px;box-shadow:0 4px 20px rgba(59,158,255,0.25)}
+.btn-primary:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 8px 30px rgba(59,158,255,0.35)}
+
+/* ─── LEAFLET DARK ─── */
+.leaflet-container{background:var(--bg3) !important}
+.leaflet-tile-pane{filter:brightness(0.7) saturate(0.5) hue-rotate(195deg)}
+.leaflet-popup-content-wrapper{background:var(--bg2);color:var(--text);border:1px solid var(--border2);box-shadow:0 8px 32px rgba(0,0,0,0.5);border-radius:10px;font-family:var(--sans);font-size:12px}
+.leaflet-popup-tip{background:var(--bg2)}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:700px){
+  .metrics{grid-template-columns:1fr 1fr}
+  .two-col{grid-template-columns:1fr}
+  .roles-grid{grid-template-columns:1fr}
+  .db-wrap{padding:14px}
+  .splash-stats{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ SPLASH ══ -->
+
+<div id="page-roles" class="page" style="align-items:center;justify-content:center">
+  <div class="roles-inner">
+    <button class="back-pill" style="margin-bottom:28px;align-self:flex-start" onclick="showPage('page-splash')">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="7,2 3,6 7,10"/><line x1="3" y1="6" x2="10" y2="6"/></svg>
+      Back
+    </button>
+    <div class="roles-wordmark">Logi<span>Trust</span></div>
+    <div class="roles-sub">Select your role to access the dashboard</div>
+    <div class="roles-grid">
+      <div class="role-card" onclick="showPage('page-admin');initMap('admin')">
+        <div class="role-icon-wrap">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <rect x="4" y="4" width="8" height="8" rx="2" fill="#3B9EFF"/>
+            <rect x="16" y="4" width="8" height="8" rx="2" fill="#3B9EFF" opacity="0.4"/>
+            <rect x="4" y="16" width="8" height="8" rx="2" fill="#3B9EFF" opacity="0.4"/>
+            <rect x="16" y="16" width="8" height="8" rx="2" fill="#3B9EFF"/>
+            <line x1="12" y1="8" x2="16" y2="8" stroke="#3B9EFF" stroke-width="1.5"/>
+            <line x1="12" y1="20" x2="16" y2="20" stroke="#3B9EFF" stroke-width="1.5"/>
+            <line x1="8" y1="12" x2="8" y2="16" stroke="#3B9EFF" stroke-width="1.5"/>
+            <line x1="20" y1="12" x2="20" y2="16" stroke="#3B9EFF" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div class="role-name">Admin</div>
+        <div class="role-desc">Full platform visibility — all shipments, sensor feeds, escrow contracts, and blockchain logs.</div>
+        <span class="role-badge rb-admin">Full Access</span>
+      </div>
+      <div class="role-card" onclick="showPage('page-shipper');initMap('shipper')">
+        <div class="role-icon-wrap">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <rect x="3" y="10" width="18" height="12" rx="2" fill="none" stroke="#22d77a" stroke-width="1.5" opacity="0.7"/>
+            <path d="M21 14h3l2 4v4h-5V14z" fill="none" stroke="#22d77a" stroke-width="1.5"/>
+            <circle cx="8" cy="22" r="2" fill="#22d77a"/>
+            <circle cx="18" cy="22" r="2" fill="#22d77a"/>
+            <line x1="8" y1="10" x2="8" y2="6" stroke="#22d77a" stroke-width="1.5"/>
+            <line x1="8" y1="6" x2="16" y2="6" stroke="#22d77a" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div class="role-name">Shipper</div>
+        <div class="role-desc">Register shipments, track outgoing goods, monitor sensor readings and escrow status.</div>
+        <span class="role-badge rb-shipper">Outgoing Only</span>
+      </div>
+      <div class="role-card" onclick="showPage('page-receiver');initMap('receiver')">
+        <div class="role-icon-wrap">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <rect x="6" y="12" width="16" height="12" rx="2" fill="none" stroke="#f5a623" stroke-width="1.5" opacity="0.7"/>
+            <path d="M10 12V9a4 4 0 018 0v3" stroke="#f5a623" stroke-width="1.5" fill="none"/>
+            <circle cx="14" cy="18" r="2" fill="#f5a623"/>
+          </svg>
+        </div>
+        <div class="role-name">Receiver</div>
+        <div class="role-desc">View incoming shipments, check compliance reports, and approve or dispute escrow releases.</div>
+        <span class="role-badge rb-receiver">Incoming Only</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADMIN DASHBOARD ══ -->
+<div id="page-admin" class="page db-wrap">
+  <button class="back-pill" onclick="LogiTrustAPI.logout(); window.location.href='index.html'">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="7,2 3,6 7,10"/><line x1="3" y1="6" x2="10" y2="6"/></svg>
+    Switch Role
+  </button>
+  <div class="topbar">
+    <div class="db-brand">
+      <div class="brand-icon">
+        <svg width="20" height="20" viewBox="0 0 46 46" fill="none">
+          <rect x="5" y="5" width="14" height="14" rx="3" fill="white" opacity="0.9"/>
+          <rect x="27" y="5" width="14" height="14" rx="3" fill="white" opacity="0.4"/>
+          <rect x="5" y="27" width="14" height="14" rx="3" fill="white" opacity="0.4"/>
+          <rect x="27" y="27" width="14" height="14" rx="3" fill="white" opacity="0.9"/>
+          <line x1="19" y1="12" x2="27" y2="12" stroke="white" stroke-width="2"/>
+          <line x1="19" y1="34" x2="27" y2="34" stroke="white" stroke-width="2"/>
+          <line x1="12" y1="19" x2="12" y2="27" stroke="white" stroke-width="2"/>
+          <line x1="34" y1="19" x2="34" y2="27" stroke="white" stroke-width="2"/>
+        </svg>
+      </div>
+      <div><div class="brand-name">LogiTrust</div><div class="brand-sub">Admin Console</div></div>
+    </div>
+    
+    <div class="topright">
+      <div class="badge-live"><div class="dot-live"></div>Live</div>
+
+      <div class="user-chip"><div class="av av-admin db-user-init">AD</div><span class="db-user-name">Admin</span></div>
+    </div>
+  </div>
+  <div class="sec-label">Platform Overview</div>
+  <div class="metrics">
+    <div class="mc c-blue"><div class="mc-lbl">Active Shipments</div><div class="mc-val" id="admin-count">0</div><span class="mbadge b-info">All routes</span></div>
+    <div class="mc c-green"><div class="mc-lbl">Avg. Temperature</div><div class="mc-val" id="admin-metric-temp">--</div><span class="mbadge b-ok">Within range</span></div>
+    <div class="mc c-red"><div class="mc-lbl">At-Risk Shipments</div><div class="mc-val" id="admin-metric-risk">0</div><span class="mbadge b-danger">Action needed</span></div>
+    <div class="mc c-amber"><div class="mc-lbl">Escrow Locked</div><div class="mc-val" id="admin-metric-escrow">₹0</div><span class="mbadge b-warn" id="admin-metric-contracts">0 contracts</span></div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">
+        All Shipments
+        <button class="btn-add" onclick="openModal()">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="1" x2="5" y2="9"/><line x1="1" y1="5" x2="9" y2="5"/></svg>
+          Add Shipment
+        </button>
+      </div>
+      <div id="admin-shipment-list" class="scrollable-list">
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" id="admin-sensor-title">Live Sensor — Select a Shipment</div>
+      <div class="sensor-block">
+        <div>
+          <div class="sensor-row"><span class="sn-name">Temperature</span><span><span class="sn-val" id="admin-temp">--</span><span class="sn-unit">°C</span></span></div>
+          <div class="bar-track"><div class="bar-fill bar-ok" id="admin-temp-bar" style="width:0%"></div></div>
+        </div>
+        <div>
+          <div class="sensor-row"><span class="sn-name">Humidity</span><span><span class="sn-val" id="admin-hum">--</span><span class="sn-unit">%</span></span></div>
+          <div class="bar-track"><div class="bar-fill bar-info" id="admin-hum-bar" style="width:0%"></div></div>
+        </div>
+        <div class="sensor-row"><span class="sn-name">GPS Status</span><span class="mbadge b-ok" id="admin-gps-lock">--</span></div>
+        <div class="sensor-row"><span class="sn-name">Spoilage Risk</span><span class="mbadge b-ok" id="admin-risk">--</span></div>
+        <div class="sensor-row"><span class="sn-name">Last Signed Payload</span><span id="admin-time" style="font-size:11px;color:var(--text3);font-family:var(--mono)">--</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="full-col card">
+    <div class="card-title">
+      Live GPS Tracking — All Shipments
+      <span class="mbadge b-ok">Geo-fence Active</span>
+    </div>
+    <div id="map-admin" class="map-div"></div>
+    <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:10px;color:var(--text3)">
+      <span>Showing all active routes via OpenStreetMap</span>
+      <span>4 shipments tracked in real-time</span>
+    </div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">AI Spoilage Risk</div>
+<div id="admin-ai-risk"></div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-size:10px;color:var(--text3);letter-spacing:.3px">Model: GradientBoost · Last retrained 3 days ago</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Blockchain Event Log</div>
+<div id="admin-event-log"></div>
+    </div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Smart Escrow — All Contracts</div>
+      <div id="admin-escrow-list"></div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:10px;color:var(--text3)">Auto-release: geo-fence + temp compliance + signed payload</div>
+    </div>
+    <div class="card">
+      <div class="card-title">RBAC — Role Permissions</div>
+      <table class="rbac-table">
+        <tr><th>Feature</th><th>Admin</th><th>Shipper</th><th>Receiver</th></tr>
+        <tr><td>All shipments view</td><td>✅</td><td>—</td><td>—</td></tr>
+        <tr><td>Add shipment</td><td>✅</td><td>✅</td><td>—</td></tr>
+        <tr><td>Sensor data</td><td>✅</td><td>✅</td><td>Read only</td></tr>
+        <tr><td>Escrow release</td><td>✅</td><td>—</td><td>✅</td></tr>
+        <tr><td>Blockchain log</td><td>✅</td><td>Own only</td><td>Own only</td></tr>
+        <tr><td>Spoilage AI</td><td>✅</td><td>✅</td><td>✅</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="footer-bar"><span>LogiTrust Enterprise · Mainnet Connected</span><span>Last sync: <b>2 min ago</b></span></div>
+</div>
+
+<!-- ══ SHIPPER DASHBOARD ══ -->
+<div id="page-shipper" class="page db-wrap">
+  <button class="back-pill" onclick="LogiTrustAPI.logout(); window.location.href='index.html'">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="7,2 3,6 7,10"/><line x1="3" y1="6" x2="10" y2="6"/></svg>
+    Switch Role
+  </button>
+  <div class="topbar">
+    <div class="db-brand">
+      <div class="brand-icon"><svg width="20" height="20" viewBox="0 0 46 46" fill="none"><rect x="5" y="5" width="14" height="14" rx="3" fill="white" opacity="0.9"/><rect x="27" y="5" width="14" height="14" rx="3" fill="white" opacity="0.4"/><rect x="5" y="27" width="14" height="14" rx="3" fill="white" opacity="0.4"/><rect x="27" y="27" width="14" height="14" rx="3" fill="white" opacity="0.9"/><line x1="19" y1="12" x2="27" y2="12" stroke="white" stroke-width="2"/><line x1="19" y1="34" x2="27" y2="34" stroke="white" stroke-width="2"/><line x1="12" y1="19" x2="12" y2="27" stroke="white" stroke-width="2"/><line x1="34" y1="19" x2="34" y2="27" stroke="white" stroke-width="2"/></svg></div>
+      <div><div class="brand-name">LogiTrust</div><div class="brand-sub">Shipper Portal</div></div>
+    </div>
+    
+    <div class="topright">
+      <div class="badge-live"><div class="dot-live"></div>Live</div>
+
+      <div class="user-chip"><div class="av av-shipper db-user-init">YB</div><span class="db-user-name">Yashas B C</span></div>
+    </div>
+  </div>
+  <div class="sec-label">My Outgoing Shipments</div>
+  <div class="metrics" style="grid-template-columns:repeat(3,1fr)">
+    <div class="mc c-blue"><div class="mc-lbl">My Shipments</div><div class="mc-val" id="shipper-metric-active">0</div><span class="mbadge b-info">Active</span></div>
+    <div class="mc c-green"><div class="mc-lbl">In Transit</div><div class="mc-val" id="shipper-metric-transit">0</div><span class="mbadge b-ok">On Schedule</span></div>
+    <div class="mc c-amber"><div class="mc-lbl">Escrow Value</div><div class="mc-val" id="shipper-metric-escrow">₹0</div><span class="mbadge b-warn">Locked</span></div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">
+        My Shipments
+        <button class="btn-add" onclick="openModal()">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="1" x2="5" y2="9"/><line x1="1" y1="5" x2="9" y2="5"/></svg>
+          New Shipment
+        </button>
+      </div>
+      <div id="shipper-shipment-list" class="scrollable-list">
+      </div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-size:10px;color:var(--text3)">Only your registered shipments are shown.</div>
+    </div>
+    <div class="card">
+      <div class="card-title" id="shipper-sensor-title">Live Sensor — Select a Shipment</div>
+      <div class="sensor-block">
+        <div>
+          <div class="sensor-row"><span class="sn-name">Temperature</span><span><span class="sn-val" id="shipper-temp">--</span><span class="sn-unit">°C</span></span></div>
+          <div class="bar-track"><div class="bar-fill bar-ok" id="shipper-temp-bar" style="width:0%"></div></div>
+        </div>
+        <div>
+          <div class="sensor-row"><span class="sn-name">Humidity</span><span><span class="sn-val" id="shipper-hum">--</span><span class="sn-unit">%</span></span></div>
+          <div class="bar-track"><div class="bar-fill bar-info" id="shipper-hum-bar" style="width:0%"></div></div>
+        </div>
+        <div class="sensor-row"><span class="sn-name">GPS Status</span><span class="mbadge b-ok" id="shipper-gps-lock">--</span></div>
+        <div class="sensor-row"><span class="sn-name">Spoilage Risk</span><span class="mbadge b-ok" id="shipper-risk">--</span></div>
+        <div class="sensor-row"><span class="sn-name">Last Signed Payload</span><span id="shipper-time" style="font-size:11px;color:var(--text3);font-family:var(--mono)">--</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="full-col card">
+    <div class="card-title" id="shipper-gps-title">GPS Tracking — Select a Shipment</div>
+    <div id="map-shipper" class="map-div"></div>
+    <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:10px;color:var(--text3)">
+      <span id="shipper-map-info">Loading route info…</span>
+      <span>Geo-fence: <span style="color:var(--green);font-weight:600">Active</span></span>
+    </div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">My Escrow Status</div>
+      <div id="shipper-escrow-list">
+      </div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:10px;color:var(--text3)">Funds release automatically on successful delivery.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">My Blockchain Transactions</div>
+<div class="user-event-log"></div>
+    </div>
+  </div>
+  <div class="footer-bar"><span>LogiTrust Enterprise · Shipper Portal</span><span>Last sync: <b>2 min ago</b></span></div>
+</div>
+
+<!-- ══ RECEIVER DASHBOARD ══ -->
+<div id="page-receiver" class="page db-wrap">
+  <button class="back-pill" onclick="LogiTrustAPI.logout(); window.location.href='index.html'">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="7,2 3,6 7,10"/><line x1="3" y1="6" x2="10" y2="6"/></svg>
+    Switch Role
+  </button>
+  <div class="topbar">
+    <div class="db-brand">
+      <div class="brand-icon"><svg width="20" height="20" viewBox="0 0 46 46" fill="none"><rect x="5" y="5" width="14" height="14" rx="3" fill="white" opacity="0.9"/><rect x="27" y="5" width="14" height="14" rx="3" fill="white" opacity="0.4"/><rect x="5" y="27" width="14" height="14" rx="3" fill="white" opacity="0.4"/><rect x="27" y="27" width="14" height="14" rx="3" fill="white" opacity="0.9"/><line x1="19" y1="12" x2="27" y2="12" stroke="white" stroke-width="2"/><line x1="19" y1="34" x2="27" y2="34" stroke="white" stroke-width="2"/><line x1="12" y1="19" x2="12" y2="27" stroke="white" stroke-width="2"/><line x1="34" y1="19" x2="34" y2="27" stroke="white" stroke-width="2"/></svg></div>
+      <div><div class="brand-name">LogiTrust</div><div class="brand-sub">Receiver Portal</div></div>
+    </div>
+    
+    <div class="topright">
+      <div class="badge-live"><div class="dot-live"></div>Live</div>
+
+      <div class="user-chip"><div class="av av-receiver db-user-init">PK</div><span class="db-user-name">Parwath Sri Raju K</span></div>
+    </div>
+  </div>
+  <div class="sec-label">Incoming Shipments</div>
+  <div class="metrics" style="grid-template-columns:repeat(3,1fr)">
+    <div class="mc c-blue"><div class="mc-lbl">Expected Deliveries</div><div class="mc-val" id="receiver-metric-expected">0</div><span class="mbadge b-info">Active</span></div>
+    <div class="mc c-green"><div class="mc-lbl">Compliant Shipments</div><div class="mc-val" id="receiver-metric-compliant">0</div><span class="mbadge b-ok">Compliant</span></div>
+    <div class="mc c-amber"><div class="mc-lbl">Pending Approval</div><div class="mc-val" id="receiver-pending-amt">₹0</div><span class="mbadge b-warn">Escrow</span></div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Incoming Shipments</div>
+      <div id="receiver-shipment-list" class="scrollable-list">
+      </div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-size:10px;color:var(--text3)">Only shipments addressed to you are shown.</div>
+    </div>
+    <div class="card">
+      <div class="card-title" id="receiver-sensor-title">Compliance Report — Select a Shipment</div>
+      <div class="sensor-block">
+        <div>
+          <div class="sensor-row"><span class="sn-name">Temperature (Live)</span><span><span class="sn-val" id="receiver-temp">--</span><span class="sn-unit">°C</span></span></div>
+          <div class="bar-track"><div class="bar-fill bar-ok" id="receiver-temp-bar" style="width:0%"></div></div>
+        </div>
+        <div>
+          <div class="sensor-row"><span class="sn-name">Humidity (Live)</span><span><span class="sn-val" id="receiver-hum">--</span><span class="sn-unit">%</span></span></div>
+          <div class="bar-track"><div class="bar-fill bar-info" id="receiver-hum-bar" style="width:0%"></div></div>
+        </div>
+        <div class="sensor-row"><span class="sn-name">GPS Status</span><span class="mbadge b-ok" id="receiver-gps-lock">--</span></div>
+        <div class="sensor-row"><span class="sn-name">Spoilage Risk</span><span class="mbadge b-ok" id="receiver-risk">--</span></div>
+        <div class="sensor-row"><span class="sn-name">Last Signed Payload</span><span id="receiver-time" style="font-size:11px;color:var(--text3);font-family:var(--mono)">--</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="full-col card">
+    <div class="card-title" id="receiver-gps-title">GPS Tracking — </div>
+    <div id="map-receiver" class="map-div"></div>
+    <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:10px;color:var(--text3)">
+      <span id="receiver-map-info">Loading route info…</span>
+      <span>Geo-fence Arrival Alert: <span style="color:var(--green);font-weight:600">Enabled</span></span>
+    </div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Escrow — Approve or Dispute</div>
+      <div id="receiver-escrow-list"></div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:10px;color:var(--text3)">Your approval triggers the smart contract escrow release.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">My Blockchain Transactions</div>
+<div class="user-event-log"></div>
+    </div>
+  </div>
+  <div class="footer-bar"><span>LogiTrust Enterprise · Receiver Portal</span><span>Last sync: <b>2 min ago</b></span></div>
+</div>
+
+<!-- ══ ADD SHIPMENT MODAL ══ -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title">
+      Register New Shipment
+      <button class="modal-close" onclick="closeModal()">&#x2715;</button>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Item Name / Description</label>
+      <input class="form-input" id="f-item" type="text" placeholder="e.g. Fresh dairy produce, Pharmaceutical batch"/>
+    </div>
+    <div class="form-row-2">
+      <div>
+        <label class="form-label">Origin City</label>
+        <select class="form-select" id="f-origin" onchange="checkCustomOrigin()">
+          <option value="">Select city…</option>
+          <option>Bengaluru</option><option>Mumbai</option><option>Delhi</option>
+          <option>Hyderabad</option><option>Chennai</option><option>Kolkata</option><option>Pune</option>
+          <option value="custom">Type custom…</option>
+        </select>
+        <input class="form-input" id="f-origin-custom" type="text" placeholder="Enter city name" style="display:none;margin-top:8px"/>
+      </div>
+      <div>
+        <label class="form-label">Destination City</label>
+        <select class="form-select" id="f-dest" onchange="checkCustomDest()">
+          <option value="">Select city…</option>
+          <option>Bengaluru</option><option>Mumbai</option><option>Delhi</option>
+          <option>Hyderabad</option><option>Chennai</option><option>Kolkata</option><option>Pune</option>
+          <option value="custom">Type custom…</option>
+        </select>
+        <input class="form-input" id="f-dest-custom" type="text" placeholder="Enter city name" style="display:none;margin-top:8px"/>
+      </div>
+    </div>
+    <div class="form-row-2">
+      <div><label class="form-label">Max Temperature (°C)</label><input class="form-input" id="f-temp" type="number" placeholder="e.g. 6"/></div>
+      <div><label class="form-label">Max Humidity (%)</label><input class="form-input" id="f-humidity" type="number" placeholder="e.g. 75"/></div>
+    </div>
+    <div class="form-row-2">
+      <div><label class="form-label">Dispatch Date</label><input class="form-input" id="f-date" type="date"/></div>
+      <div><label class="form-label">Escrow Value (ETH)</label><input class="form-input" id="f-escrow" type="number" step="0.0001" placeholder="e.g. 0.001"/></div>
+    </div>
+    <div class="form-row-2">
+      <div>
+        <label class="form-label">Receiver Email</label>
+        <input class="form-input" id="f-email" type="email" placeholder="receiver@example.com"/>
+      </div>
+      <div>
+        <label class="form-label">Sensor Hardware ID</label>
+        <input class="form-input" id="f-sensor" type="text" placeholder="e.g. UNO-R4-MAC"/>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="submitShipment()">Register Shipment on Blockchain</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="config.js"></script>
+<script src="api.js?v=2"></script>
+<script>
+// ── AUTH GUARD ──────────────────────────────────────────────
+if (!LogiTrustAPI.isLoggedIn()) {
+  window.location.href = "index.html";
+}
+var currentUser = null;
+var activeShipmentId = null;
+
+async function bootstrapSession(){
+  currentUser = await LogiTrustAPI.me();
+  if(!currentUser){ return; }
+  
+  updateUserUI(currentUser);
+
+  // Jump straight to the role this Google account is assigned, skipping the role picker.
+  var roleMap = { ADMIN:'page-admin', SHIPPER:'page-shipper', RECEIVER:'page-receiver' };
+  showPage(roleMap[currentUser.role]);
+  initMap(currentUser.role.toLowerCase());
+  await loadShipments();
+  setInterval(loadShipments, 3000); // Live polling!
+}
+
+function updateUserUI(user) {
+  var initials = user.name.split(' ').map(function(n) { return n[0]; }).join('').toUpperCase().substring(0, 2);
+  var names = document.querySelectorAll('.db-user-name');
+  var inits = document.querySelectorAll('.db-user-init');
+  
+  for(var i=0; i<names.length; i++) names[i].textContent = user.name;
+  for(var j=0; j<inits.length; j++) inits[j].textContent = initials;
+}
+
+var shipments = [];
+
+async function loadShipments(){
+  var data = await LogiTrustAPI.listShipments();
+  if(!Array.isArray(data)) return;
+  shipments = data.map(function(s){
+    return {
+      id:s.shipmentCode, item:s.item, origin:s.origin, dest:s.destination,
+      status:s.status.toLowerCase(), escrow:s.escrowValue, riskScore:s.riskScore,
+      latestReading: (s.readings && s.readings[0]) ? s.readings[0] : null
+    };
+  });
+  if (!activeShipmentId && shipments.length > 0) {
+    activeShipmentId = shipments[0].id;
+  }
+  renderShipmentLists();
+  renderActiveShipment();
+}
+
+function selectShipment(id) {
+  activeShipmentId = id;
+  renderShipmentLists();
+  renderActiveShipment();
+}
+
+window.currentMapTarget = null;
+function renderActiveShipment() {
+  if (!activeShipmentId) return;
+  var s = shipments.find(s => s.id === activeShipmentId);
+  if (!s) return;
+  
+  ['admin', 'shipper', 'receiver'].forEach(function(role) {
+    var title = document.getElementById(role + '-sensor-title');
+    if (title) title.textContent = 'Live Sensor — ' + s.id;
+    var gpsTitle = document.getElementById(role + '-gps-title');
+    if (gpsTitle) gpsTitle.textContent = 'GPS Tracking — ' + s.id + ' (' + s.origin + ' → ' + s.dest + ')';
+  });
+
+  var r = s.latestReading;
+  
+  ['admin', 'shipper', 'receiver'].forEach(function(role) {
+    if (r) {
+      var tempEl = document.getElementById(role + '-temp');
+      if (tempEl) tempEl.textContent = r.temperature.toFixed(1);
+      var tempBar = document.getElementById(role + '-temp-bar');
+      if (tempBar) {
+        tempBar.style.width = Math.min(100, Math.max(0, (r.temperature / 15) * 100)) + '%';
+        tempBar.className = r.temperature > 8 ? 'bar-fill bar-danger' : 'bar-fill bar-ok';
+      }
+      
+      var humEl = document.getElementById(role + '-hum');
+      if (humEl) humEl.textContent = r.humidity.toFixed(1);
+      var humBar = document.getElementById(role + '-hum-bar');
+      if (humBar) {
+        humBar.style.width = Math.min(100, Math.max(0, r.humidity)) + '%';
+        humBar.className = r.humidity > 70 ? 'bar-fill bar-warn' : 'bar-fill bar-info';
+      }
+      
+      var lockEl = document.getElementById(role + '-gps-lock');
+      if (lockEl) {
+        if (r.simulatedLocation) {
+          lockEl.textContent = 'Approximate Location';
+          lockEl.className = 'mbadge b-warn';
+        } else {
+          lockEl.textContent = r.gpsLock ? 'Lock Acquired' : 'Searching...'; 
+          lockEl.className = r.gpsLock ? 'mbadge b-ok' : 'mbadge b-warn';
+        }
+      }
+      
+      var timeEl = document.getElementById(role + '-time');
+      if (timeEl) {
+        var diff = Math.floor((new Date() - new Date(r.timestamp)) / 1000);
+        timeEl.textContent = diff < 60 ? diff + 's ago' : Math.floor(diff/60) + 'm ago';
+      }
+    }
+    
+    var riskEl = document.getElementById(role + '-risk');
+    if (riskEl) {
+      var risk = s.riskScore || 0;
+      var riskText = risk <= 30 ? 'Low' : risk <= 60 ? 'Medium' : 'High';
+      var riskClass = risk <= 30 ? 'b-ok' : risk <= 60 ? 'b-warn' : 'b-danger';
+      riskEl.textContent = risk.toFixed(1) + '% — ' + riskText;
+      riskEl.className = 'mbadge ' + riskClass;
+    }
+  });
+
+  var isNewTarget = (window.currentMapTarget !== s.id);
+  
+  if (r && r.lat && r.lon && !r.simulatedLocation) {
+    if (shipperMap && shipperLayer) {
+      if (window.truckMarker) { shipperMap.removeLayer(window.truckMarker); window.truckMarker = null; }
+      if (window.truckTimeout) { clearTimeout(window.truckTimeout); window.truckTimeout = null; }
+      shipperLayer.clearLayers();
+      var m = L.marker([r.lat, r.lon], {icon:makeTruckIcon()}).addTo(shipperLayer);
+      if (isNewTarget) {
+        m.bindPopup('Live: ' + s.id).openPopup();
+        shipperMap.setView([r.lat, r.lon], 12);
+      }
+    }
+    if (receiverMap && receiverLayer) {
+      if (window.truckMarker) { receiverMap.removeLayer(window.truckMarker); window.truckMarker = null; }
+      if (window.truckTimeout) { clearTimeout(window.truckTimeout); window.truckTimeout = null; }
+      receiverLayer.clearLayers();
+      var m = L.marker([r.lat, r.lon], {icon:makeTruckIcon()}).addTo(receiverLayer);
+      if (isNewTarget) {
+        m.bindPopup('Live: ' + s.id).openPopup();
+        receiverMap.setView([r.lat, r.lon], 12);
+      }
+    }
+  } else {
+    // Map simulation
+    var coords = generateRoute(s.origin, s.dest);
+    if (coords.length > 0) {
+      if (shipperMap && currentUser.role === 'SHIPPER') {
+        manageTruckSimulation(shipperMap, coords, s.status, s.id);
+      } else if (receiverMap && currentUser.role === 'RECEIVER') {
+        manageTruckSimulation(receiverMap, coords, s.status, s.id);
+      }
+    }
+  }
+  window.currentMapTarget = s.id;
+}
+
+function renderShipmentLists(){
+  var statusPill = { pending:'<span class="pill p-pd">Pending Pickup</span>',
+    in_transit:'<span class="pill p-tr">In Transit</span>',
+    delivered:'<span class="pill p-dl">Delivered</span>',
+    disputed:'<span class="pill p-rk">Disputed</span>' };
+  var html = shipments.map(function(s){
+    var isActive = s.id === activeShipmentId ? 'border: 1px solid var(--accent);' : '';
+    return '<div class="srow" style="cursor:pointer;'+isActive+'" onclick="selectShipment(\''+s.id+'\')"><div><div class="sid">'+s.id+'</div><div class="sroute">'+s.origin+' → '+s.dest+' · '+s.item+'</div></div>'+(statusPill[s.status]||'')+'</div>';
+  }).join('');
+  
+  ['admin-shipment-list','shipper-shipment-list','receiver-shipment-list'].forEach(function(lid){
+    var el=document.getElementById(lid);
+    if(el && el.innerHTML !== html) el.innerHTML = html;
+  });
+  
+  var cnt=document.getElementById('admin-count');
+  if(cnt) cnt.textContent = shipments.length;
+  
+  // Escrow lists rendering for Shipper and Receiver
+  var shipperEscrowHtml = shipments.map(function(s){
+    return '<div class="erow"><div><div style="font-family:var(--display);font-weight:700;font-size:13px">'+s.id+' — ₹'+s.escrow+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">'+s.origin+' → '+s.dest+' · '+s.item+'</div></div><span class="mbadge b-info" style="margin-top:4px">'+s.status.toUpperCase()+'</span></div>';
+  }).join('');
+  
+  var receiverEscrowHtml = shipments.map(function(s){
+    var actions = '';
+    if (s.status === 'pending') {
+      actions = '<div style="font-size:10px;color:var(--text3);margin-top:6px">Waiting for pickup...</div>';
+    } else if(s.status === 'in_transit') {
+      if (window.globalTruckArrivals && window.globalTruckArrivals[s.id]) {
+        actions = '<div style="display:flex;gap:8px;margin-top:6px"><button class="action-btn btn-approve" onclick="LogiTrustAPI.approveEscrow(\''+s.id+'\').then(loadShipments)">Approve Release</button><button class="action-btn btn-dispute" onclick="LogiTrustAPI.disputeEscrow(\''+s.id+'\').then(loadShipments)">Dispute</button></div>';
+      } else {
+        actions = '<div style="font-size:10px;color:var(--text3);margin-top:6px">Shipment in transit...</div>';
+      }
+    }
+    return '<div><div class="erow"><div><div style="font-family:var(--display);font-weight:700;font-size:13px">'+s.id+' — ₹'+s.escrow+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">'+s.origin+' → '+s.dest+' · '+s.item+'</div></div><span class="mbadge b-info" style="margin-top:4px">'+s.status.toUpperCase()+'</span></div>'+actions+'</div>';
+  }).join('');
+  
+  var se = document.getElementById('shipper-escrow-list');
+  if(se && se.innerHTML !== shipperEscrowHtml) se.innerHTML = shipperEscrowHtml;
+  
+  var re = document.getElementById('receiver-escrow-list');
+  if(re && re.innerHTML !== receiverEscrowHtml) re.innerHTML = receiverEscrowHtml;
+
+  // Render all active shipments on the Admin map
+  if (adminMap && adminLayer) {
+    adminLayer.clearLayers();
+    shipments.forEach(function(s) {
+      if (s.latestReading && s.latestReading.lat && s.latestReading.lon) {
+        var riskClass = (s.riskScore||0) <= 30 ? '#22d77a' : (s.riskScore||0) <= 60 ? '#f5a623' : '#ff5252';
+        L.marker([s.latestReading.lat, s.latestReading.lon], {icon:makeDotIcon(riskClass)})
+         .bindPopup('<b>' + s.id + '</b><br>' + s.origin + ' → ' + s.dest)
+         .addTo(adminLayer);
+      }
+    });
+  }
+}
+
+bootstrapSession();
+
+var adminMap=null,shipperMap=null,receiverMap=null;
+var adminLayer=null,shipperLayer=null,receiverLayer=null;
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function createLeafletMap(divId){
+  var map=L.map(divId,{zoomControl:true,scrollWheelZoom:false}).setView([20.5937,78.9629],5);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© OpenStreetMap',maxZoom:18
+  }).addTo(map);
+  return map;
+}
+
+function makeDotIcon(color){
+  return L.divIcon({
+    className:'',
+    html:'<div style="width:14px;height:14px;border-radius:50%;background:'+color+';border:2.5px solid white;box-shadow:0 0 10px '+color+'"></div>',
+    iconSize:[14,14],iconAnchor:[7,7]
+  });
+}
+
+function makeTruckIcon(){
+  return L.divIcon({
+    className:'',
+    html:'<div style="font-size:22px;filter:drop-shadow(0 0 6px rgba(59,158,255,0.7))">🚚</div>',
+    iconSize:[28,28],iconAnchor:[14,14]
+  });
+}
+
+var CITY_COORDS = {
+  "Bengaluru": [12.9716, 77.5946],
+  "Mumbai": [19.0760, 72.8777],
+  "Delhi": [28.7041, 77.1025],
+  "Hyderabad": [17.3850, 78.4867],
+  "Chennai": [13.0827, 80.2707],
+  "Kolkata": [22.5726, 88.3639],
+  "Pune": [18.5204, 73.8567]
+};
+
+function generateRoute(startCity, endCity) {
+  var start = CITY_COORDS[startCity];
+  var end = CITY_COORDS[endCity];
+  if (!start || !end) return [];
+  
+  var coords = [];
+  var steps = 300; // 300 frames * 600ms = 180 seconds
+  for (var i = 0; i <= steps; i++) {
+    var lat = start[0] + (end[0] - start[0]) * (i / steps);
+    var lon = start[1] + (end[1] - start[1]) * (i / steps);
+    coords.push([lat, lon]);
+  }
+  return coords;
+}
+
+window.truckSim = { sId: null, index: 0, marker: null, timeout: null, arrived: false, running: false };
+window.globalTruckArrivals = window.globalTruckArrivals || {};
+
+function manageTruckSimulation(map, coords, status, sId) {
+  if (!coords || coords.length === 0) return;
+
+  if (window.truckSim.sId !== sId) {
+    if (window.truckSim.marker) map.removeLayer(window.truckSim.marker);
+    if (window.truckSim.timeout) clearTimeout(window.truckSim.timeout);
+    window.truckSim = { sId: sId, index: 0, marker: null, timeout: null, arrived: false, running: false };
+  }
+
+  if (!window.truckSim.marker) {
+    // If delivered or disputed, start at destination (or current index if we had tracking)
+    let startIndex = (status === 'delivered') ? coords.length - 1 : 0;
+    window.truckSim.marker = L.marker(coords[startIndex], {icon: makeTruckIcon(), zIndexOffset: 1000}).addTo(map);
+    
+    // Frame the entire route so it's always in view
+    map.fitBounds([coords[0], coords[coords.length - 1]], { padding: [30, 30] });
+  }
+
+  window.truckSim.status = status; 
+  window.truckSim.coords = coords;
+
+  if (!window.truckSim.running) {
+    window.truckSim.running = true;
+    _truckTick();
+  }
+}
+
+function _truckTick() {
+  var sim = window.truckSim;
+  if (!sim.sId || !sim.marker) { sim.running = false; return; }
+
+  if (sim.status === 'pending') {
+    sim.index = 0;
+    sim.marker.setLatLng(sim.coords[0]);
+    sim.timeout = setTimeout(_truckTick, 1000);
+  } else if (sim.status === 'disputed') {
+    sim.timeout = setTimeout(_truckTick, 1000);
+  } else if (sim.status === 'delivered') {
+    sim.index = sim.coords.length - 1;
+    sim.marker.setLatLng(sim.coords[sim.index]);
+    sim.arrived = true;
+    window.globalTruckArrivals[sim.sId] = true;
+    sim.timeout = setTimeout(_truckTick, 1000);
+  } else if (sim.status === 'in_transit') {
+    if (sim.index < sim.coords.length - 1) {
+      sim.index++;
+      sim.marker.setLatLng(sim.coords[sim.index]);
+      sim.timeout = setTimeout(_truckTick, 600);
+    } else {
+      if (!sim.arrived) {
+        sim.arrived = true;
+        window.globalTruckArrivals[sim.sId] = true;
+        renderShipmentLists();
+      }
+      sim.timeout = setTimeout(_truckTick, 1000);
+    }
+  }
+}
+
+function initMap(role){
+  if(role==='admin'&&!adminMap){
+    setTimeout(function(){
+      adminMap=createLeafletMap('map-admin');
+      adminLayer = L.layerGroup().addTo(adminMap);
+      renderShipmentLists(); // Plot any already-loaded shipments
+    },200);
+  }
+  if(role==='shipper'&&!shipperMap){
+    setTimeout(function(){
+      shipperMap=createLeafletMap('map-shipper');
+      shipperLayer = L.layerGroup().addTo(shipperMap);
+      renderActiveShipment(); // Plot active shipment
+    },200);
+  }
+  if(role==='receiver'&&!receiverMap){
+    setTimeout(function(){
+      receiverMap=createLeafletMap('map-receiver');
+      receiverLayer = L.layerGroup().addTo(receiverMap);
+      renderActiveShipment(); // Plot active shipment
+    },200);
+  }
+}
+
+function openModal(){
+  document.getElementById('modal').classList.add('open');
+  var d=document.getElementById('f-date');
+  if(!d.value){d.valueAsDate=new Date();}
+}
+function closeModal(){
+  document.getElementById('modal').classList.remove('open');
+}
+function checkCustomOrigin(){
+  var v=document.getElementById('f-origin').value;
+  document.getElementById('f-origin-custom').style.display=(v==='custom')?'block':'none';
+}
+function checkCustomDest(){
+  var v=document.getElementById('f-dest').value;
+  document.getElementById('f-dest-custom').style.display=(v==='custom')?'block':'none';
+}
+function getCity(selId,custId){
+  var v=document.getElementById(selId).value;
+  return v==='custom'?document.getElementById(custId).value.trim():v;
+}
+
+async function submitShipment(){
+  var item=document.getElementById('f-item').value.trim();
+  var origin=getCity('f-origin','f-origin-custom');
+  var dest=getCity('f-dest','f-dest-custom');
+  if (origin && dest && origin.toLowerCase() === dest.toLowerCase()) {
+    alert('Origin and Destination cannot be the same city.');
+    return;
+  }
+  var maxTemp=parseFloat(document.getElementById('f-temp').value)||10;
+  var maxHumidity=parseFloat(document.getElementById('f-humidity').value)||80;
+  var escrow=parseFloat(document.getElementById('f-escrow').value)||0;
+  var sensorId = document.getElementById('f-sensor') ? document.getElementById('f-sensor').value.trim() : "";
+  var receiverEmail = document.getElementById('f-email') ? document.getElementById('f-email').value.trim() : "";
+  if(!item||!origin||!dest){alert('Please fill in item name, origin and destination.');return;}
+
+  var result = await LogiTrustAPI.createShipment({
+    item:item, origin:origin, destination:dest,
+    maxTemp:maxTemp, maxHumidity:maxHumidity, escrowValue:escrow, assignedSensorId:sensorId, receiverEmail:receiverEmail
+  });
+  if(!result || result.error){ alert('Could not register shipment: '+(result&&result.error||'unknown error')); return; }
+
+  closeModal();
+  await loadShipments();
+  alert('✅ '+result.shipmentCode+' registered on LogiTrust!\n\n'+
+    (result.onChainTxHash ? 'On-chain tx: '+result.onChainTxHash : 'Saved to database (deploy contracts + set env vars to also write on-chain).')+
+    '\nEscrow locked: ₹'+escrow+'\nRoute: '+origin+' → '+dest);
+}
+
+async function approveEscrow(btn,shipId){
+  var row=btn.closest('.erow');
+  var res = await LogiTrustAPI.approveEscrow(shipId);
+  if(res && !res.error){
+    row.querySelectorAll('.action-btn').forEach(function(b){b.disabled=true;b.style.opacity='0.4'});
+    var badge=document.createElement('div');
+    badge.style.marginTop='8px';
+    badge.innerHTML='<span class="mbadge b-ok">✅ Released — tx '+(res.txHash||'').slice(0,10)+'…</span>';
+    row.appendChild(badge);
+  } else {
+    alert(res && res.error ? 'Error: ' + res.error : 'Release failed — deploy contracts first');
+  }
+}
+async function disputeEscrow(btn,shipId){
+  var row=btn.closest('.erow');
+  var res = await LogiTrustAPI.disputeEscrow(shipId);
+  if(res && !res.error){
+    row.querySelectorAll('.action-btn').forEach(function(b){b.disabled=true;b.style.opacity='0.4'});
+    var badge=document.createElement('div');
+    badge.style.marginTop='8px';
+    badge.innerHTML='<span class="mbadge b-danger">⚠ Dispute raised — tx '+(res.txHash||'').slice(0,10)+'…</span>';
+    row.appendChild(badge);
+  } else {
+    alert(res && res.error ? 'Error: ' + res.error : 'Dispute failed — deploy contracts first');
+  }
+}
+
+document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)closeModal()});
+
+// --- REVAMP INJECTIONS ---
+async function fetchNotifications() {
+  if(!currentUser) return;
+  const notifs = await LogiTrustAPI.getNotifications();
+  document.querySelectorAll('#notif-count').forEach(el => {
+    el.textContent = notifs.length;
+  });
+  document.querySelectorAll('#notif-badge').forEach(el => {
+    el.onclick = () => {
+      if(notifs.length === 0) {
+        alert("No notifications");
+        return;
+      }
+      let msg = notifs.map(n => n.message).join('\n\n');
+      alert("NOTIFICATIONS:\n\n" + msg);
+    };
+  });
+}
+
+// Hook into loadShipments to add Admin and Shipper action buttons in the UI
+
+// Hook into loadShipments to add Admin, Shipper, and Receiver action buttons in the UI
+const originalRenderShipmentLists = renderShipmentLists;
+renderShipmentLists = function() {
+  originalRenderShipmentLists();
+  
+  if (currentUser.role === 'ADMIN') {
+    let adminHtml = shipments.map(s => {
+      let bcolor = s.status === 'disputed' ? 'b-danger' : (s.status === 'delivered' ? 'b-ok' : 'b-info');
+      let flagHtml = s.adminFlagged ? `<span class="mbadge b-danger" style="margin-right:10px">🚩 Flagged</span>` : '';
+      let actions = '';
+      if (s.status === 'disputed' || s.adminFlagged) {
+         actions = `
+           <div style="margin-top:8px; display:flex; gap:8px">
+             <button class="action-btn btn-approve" onclick="adminResolve('${s.id}', 'RELEASE_FUNDS')">Force Release</button>
+             <button class="action-btn btn-dispute" onclick="adminResolve('${s.id}', 'REFUND_RECEIVER')">Force Refund</button>
+           </div>
+         `;
+      }
+      return `
+      <div class="erow">
+        <div>
+          <div style="font-family:var(--display);font-weight:700;font-size:13px">${s.id} — ₹${s.escrow}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${s.origin} → ${s.dest}</div>
+        </div>
+        <div style="text-align:right">
+           ${flagHtml}
+           <span class="mbadge ${bcolor}">${s.status.toUpperCase()}</span>
+           ${actions}
+        </div>
+      </div>
+      `;
+    }).join('');
+    let adminList = document.getElementById('admin-escrow-list');
+    if (adminList) adminList.innerHTML = adminHtml || '<div style="font-size:12px;color:var(--text3)">No shipments found.</div>';
+  }
+
+  if (currentUser.role === 'SHIPPER') {
+    let shipperHtml = shipments.map(s => {
+      let bcolor = s.status === 'disputed' ? 'b-danger' : (s.status === 'delivered' ? 'b-ok' : 'b-info');
+      let actions = '';
+      if (s.status === 'in_transit' && !s.adminFlagged) {
+         actions = `
+           <div style="margin-top:8px">
+             <button class="action-btn btn-dispute" onclick="flagDelay('${s.id}')">Flag Delay</button>
+           </div>
+         `;
+      }
+      return `
+      <div class="erow">
+        <div>
+          <div style="font-family:var(--display);font-weight:700;font-size:13px">${s.id}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${s.origin} → ${s.dest} · ${s.item}</div>
+        </div>
+        <div style="text-align:right">
+           <div class="eamt">₹${s.escrow}</div>
+           <span class="mbadge ${bcolor}">${s.status.toUpperCase()}</span>
+           ${s.adminFlagged ? '<div style="font-size:10px;color:var(--amber);margin-top:4px">Flagged for Review</div>' : actions}
+        </div>
+      </div>
+      `;
+    }).join('');
+    let shipperList = document.getElementById('shipper-escrow-list');
+    if (shipperList) shipperList.innerHTML = shipperHtml || '<div style="font-size:12px;color:var(--text3);padding:10px">No shipments found.</div>';
+    
+    // Update Shipper Metrics
+    let active = shipments.length;
+    let transit = shipments.filter(s => s.status === 'in_transit').length;
+    let escrowTotal = shipments.reduce((sum, s) => sum + (s.status !== 'delivered' && s.status !== 'disputed' ? s.escrow : 0), 0);
+    
+    let el1 = document.getElementById('shipper-metric-active');
+    if(el1) el1.textContent = active;
+    let el2 = document.getElementById('shipper-metric-transit');
+    if(el2) el2.textContent = transit;
+    let el3 = document.getElementById('shipper-metric-escrow');
+    if(el3) el3.textContent = escrowTotal + ' ETH';
+  }
+
+  if (currentUser.role === 'RECEIVER') {
+    // Populate Incoming Shipments
+    let statusPill = { pending:'<span class="pill p-pd">Pending</span>', in_transit:'<span class="pill p-tr">In Transit</span>', delivered:'<span class="pill p-dl">Delivered</span>', disputed:'<span class="pill p-ar">Disputed</span>' };
+    let rcvHtml = shipments.map(s => {
+       let isActive = s.id === activeShipmentId ? 'border: 1px solid var(--accent);' : '';
+       return `<div class="srow" style="cursor:pointer;${isActive}" onclick="selectShipment('${s.id}')">
+         <div><div class="sid">${s.id}</div><div class="sroute">From ${s.origin} · ${s.item}</div></div>
+         ${statusPill[s.status]||''}
+       </div>`;
+    }).join('');
+    let rcvList = document.getElementById('receiver-shipment-list');
+    if (rcvList) rcvList.innerHTML = rcvHtml || '<div style="font-size:12px;color:var(--text3);padding:10px">No incoming shipments found.</div>';
+
+    // Populate Escrow Approvals
+    let pendingAmt = 0;
+    let rcvEscrowHtml = shipments.map(s => {
+      let actions = '';
+      let bcolor = s.status === 'disputed' ? 'b-danger' : (s.status === 'delivered' ? 'b-ok' : 'b-info');
+      // They can approve/dispute if in transit or delivered (but not already released/disputed)
+      if (s.status === 'in_transit' || s.status === 'pending') {
+          pendingAmt += s.escrow;
+      }
+      
+      if (s.status === 'pending') {
+          actions = '<div style="font-size:10px;color:var(--text3);margin-top:6px">Waiting for pickup...</div>';
+      } else if (s.status === 'in_transit') {
+          if (window.globalTruckArrivals && window.globalTruckArrivals[s.id]) {
+            actions = `
+            <div style="display:flex;gap:8px;margin-top:6px">
+              <button class="action-btn btn-approve" onclick="approveEscrow(this,'${s.id}')">Approve Release</button>
+              <button class="action-btn btn-dispute" onclick="disputeEscrow(this,'${s.id}')">Dispute</button>
+            </div>
+            `;
+          } else {
+            actions = '<div style="font-size:10px;color:var(--text3);margin-top:6px">Shipment in transit...</div>';
+          }
+      } else {
+          actions = `<span class="mbadge ${bcolor}" style="margin-top:4px">${s.status.toUpperCase()}</span>`;
+      }
+      return `
+      <div class="erow" id="escrow-${s.id}">
+        <div>
+          <div style="font-family:var(--display);font-weight:700;font-size:13px">${s.id} — ₹${s.escrow}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${s.origin} → ${s.dest} · ${s.item}</div>
+        </div>
+        ${actions}
+      </div>
+      `;
+    }).join('');
+    let rcvEscrow = document.getElementById('receiver-escrow-list');
+    if (rcvEscrow) rcvEscrow.innerHTML = rcvEscrowHtml || '<div style="font-size:12px;color:var(--text3);padding:10px">No active escrows.</div>';
+    
+    // Update metric
+    let rcvMetric = document.getElementById('receiver-pending-amt');
+    if (rcvMetric) rcvMetric.textContent = pendingAmt + ' ETH';
+  }
+
+    // === DYNAMIC REALISTIC UI UPDATES ===
+    
+    // Generate realistic Blockchain Logs from shipments
+    let allLogs = [];
+    shipments.forEach(s => {
+        allLogs.push({ time: s.id.replace('SHP-',''), type: 'Registered', msg: `Shipment registered — ${s.id}`, hash: '0x' + Math.random().toString(16).slice(2,10) + '... · Registry Contract', color: 'var(--text3)' });
+        if (s.status !== 'pending') {
+            allLogs.push({ time: s.id.replace('SHP-','') + '1', type: 'Sensor', msg: `Sensor payload verified — ${s.id}`, hash: '0x' + Math.random().toString(16).slice(2,10) + '... · Oracle Node', color: 'var(--accent)' });
+        }
+        if (s.status === 'delivered') {
+            allLogs.push({ time: s.id.replace('SHP-','') + '2', type: 'Release', msg: `Escrow released — ${s.id}`, hash: '0x' + (s.onChainTxHash || Math.random().toString(16).slice(2,10)) + '... · Smart Contract', color: 'var(--green)' });
+        }
+        if (s.status === 'disputed' || s.adminFlagged) {
+            allLogs.push({ time: s.id.replace('SHP-','') + '3', type: 'Dispute', msg: `Dispute flagged — ${s.id}`, hash: '0x' + (s.onChainTxHash || Math.random().toString(16).slice(2,10)) + '... · Smart Contract', color: 'var(--red)' });
+        }
+    });
+    // Sort logs descending
+    allLogs.sort((a,b) => b.time.localeCompare(a.time));
+    
+    let logHtml = allLogs.slice(0, 6).map(l => `
+      <div class="crow">
+        <div class="cdot" style="background:${l.color};color:${l.color}"></div>
+        <div>
+          <div class="cev">${l.msg}</div>
+          <div class="chash">${l.hash}</div>
+          <div class="ctime">Recent Event</div>
+        </div>
+      </div>
+    `).join('');
+    
+    let adminLogEl = document.getElementById('admin-event-log');
+    if (adminLogEl) adminLogEl.innerHTML = logHtml || '<div style="font-size:12px;color:var(--text3);padding:10px">No blockchain events yet.</div>';
+
+    // Inject empty states if lists are empty
+    if (shipments.length === 0) {
+        let emptyState = '<div style="font-size:12px;color:var(--text3);padding:10px">No active shipments found. Create one to begin tracking.</div>';
+        let rcEmptyState = '<div style="font-size:12px;color:var(--text3);padding:10px">No shipments have been dispatched to you yet.</div>';
+        
+        let al = document.getElementById('admin-shipment-list'); if (al) al.innerHTML = emptyState;
+        let sl = document.getElementById('shipper-shipment-list'); if (sl) sl.innerHTML = emptyState;
+        let rl = document.getElementById('receiver-shipment-list'); if (rl) rl.innerHTML = rcEmptyState;
+        if (escrowEl) escrowEl.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:10px">No active escrow contracts.</div>';
+    }
+
+    
+    document.querySelectorAll('.user-event-log').forEach(el => {
+        el.innerHTML = logHtml || '<div style="font-size:12px;color:var(--text3);padding:10px">No blockchain events yet.</div>';
+    });
+
+    if (currentUser.role === 'ADMIN') {
+        // Admin Metrics
+        let activeNodes = shipments.filter(s => s.status === 'in_transit' || s.status === 'delivered').length;
+        let temps = shipments.map(s => s.latestReading ? s.latestReading.temperature : 0).filter(t => t > 0);
+        let avgTemp = temps.length ? (temps.reduce((a,b)=>a+b,0)/temps.length).toFixed(1) + '°C' : '--';
+        let atRisk = shipments.filter(s => s.status === 'disputed' || s.adminFlagged).length;
+        let escrowTotal = shipments.reduce((sum, s) => sum + (s.status !== 'delivered' && s.status !== 'disputed' ? s.escrow : 0), 0);
+        let contractCount = shipments.filter(s => s.status !== 'delivered' && s.status !== 'disputed').length;
+        
+        let elTemp = document.getElementById('admin-metric-temp'); if(elTemp) elTemp.textContent = avgTemp;
+        let elRisk = document.getElementById('admin-metric-risk'); if(elRisk) elRisk.textContent = atRisk;
+        let elEscrow = document.getElementById('admin-metric-escrow'); if(elEscrow) elEscrow.textContent = escrowTotal + ' ETH';
+        let elContracts = document.getElementById('admin-metric-contracts'); if(elContracts) elContracts.textContent = contractCount + ' contracts';
+
+        // Admin AI Spoilage
+        let aiHtml = shipments.filter(s => s.latestReading).map(s => {
+            let risk = s.riskScore || 0;
+            let color = risk > 60 ? 'var(--red)' : risk > 30 ? 'var(--amber)' : 'var(--green)';
+            let t = s.latestReading.temperature.toFixed(1);
+            return `
+              <div class="sp-item">
+                <div>
+                  <div style="font-family:var(--display);font-weight:700;font-size:13px;color:var(--text)">${s.id}</div>
+                  <div style="font-size:11px;color:var(--text3);margin-top:2px">${s.item} · ${t}°C</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div class="rb-wrap"><div class="rb-fill" style="width:${risk}%;background:${color}"></div></div>
+                  <span style="font-size:12px;font-weight:700;color:${color};font-family:var(--display)">${risk.toFixed(0)}%</span>
+                </div>
+              </div>
+            `;
+        }).join('');
+        let aiEl = document.getElementById('admin-ai-risk');
+        if (aiEl) aiEl.innerHTML = aiHtml || '<div style="font-size:12px;color:var(--text3);padding:10px">No active sensor streams for AI analysis.</div>';
+    }
+
+    if (currentUser.role === 'RECEIVER') {
+        let expected = shipments.length;
+        let compliant = shipments.filter(s => !s.adminFlagged && s.status !== 'disputed').length;
+        let elExp = document.getElementById('receiver-metric-expected'); if(elExp) elExp.textContent = expected;
+        let elComp = document.getElementById('receiver-metric-compliant'); if(elComp) elComp.textContent = compliant;
+    }
+
+};
+
+
+async function flagDelay(id) {
+  if(confirm("Report delay to Admin?")) {
+    await LogiTrustAPI.flagDelay(id);
+    alert("Flagged successfully.");
+    loadShipments();
+  }
+}
+
+async function adminResolve(id, action) {
+  if(confirm("Confirm admin action: " + action + "?")) {
+    await LogiTrustAPI.adminResolve(id, action);
+    alert("Resolved successfully.");
+    loadShipments();
+  }
+}
+</script>
+</body>
+
+</html>
+

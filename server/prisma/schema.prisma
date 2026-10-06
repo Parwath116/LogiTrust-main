@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  SHIPPER
+  RECEIVER
+}
+
+enum ShipmentStatus {
+  PENDING
+  IN_TRANSIT
+  DELIVERED
+  DISPUTED
+}
+
+model User {
+  id         String   @id @default(uuid())
+  googleId   String   @unique
+  email      String   @unique
+  name       String
+  avatarUrl  String?
+  role       Role     @default(SHIPPER)
+  walletAddr String?
+  createdAt  DateTime @default(now())
+
+  shipmentsShipped  Shipment[] @relation("ShipperShipments")
+  shipmentsReceived Shipment[] @relation("ReceiverShipments")
+  notifications     Notification[]
+}
+
+model Shipment {
+  id            String         @id @default(uuid())
+  shipmentCode  String         @unique // e.g. SHP-2041
+  item          String
+  origin        String
+  destination   String
+  maxTemp       Float
+  maxHumidity   Float
+  escrowValue   Float
+  status        ShipmentStatus @default(PENDING)
+  onChainTxHash String?
+  riskScore     Float?
+  dispatchedAt  DateTime?
+  createdAt     DateTime       @default(now())
+
+  shipperId  String
+  shipper    User   @relation("ShipperShipments", fields: [shipperId], references: [id])
+  receiverId String?
+  receiver   User?  @relation("ReceiverShipments", fields: [receiverId], references: [id])
+  receiverEmail String?
+  adminFlagged  Boolean @default(false)
+  assignedSensorId String?
+
+  readings SensorReading[]
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model SensorReading {
+  id          String   @id @default(uuid())
+  shipmentId  String
+  shipment    Shipment @relation(fields: [shipmentId], references: [id])
+  timestamp   DateTime
+  temperature Float
+  humidity    Float
+  lat         Float
+  lon         Float
+  gpsLock     Boolean
+  sensorId    String
+  signature   String
+  breached    Boolean  @default(false)
+  simulatedLocation Boolean @default(false)
+  createdAt   DateTime @default(now())
+}

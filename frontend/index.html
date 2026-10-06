@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>LogiTrust — Smart Supply Chain</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+
+:root{
+  --bg:#06090f;
+  --bg2:#0c1119;
+  --bg3:#111a27;
+  --bg4:#162033;
+  --border:rgba(99,179,255,0.10);
+  --border2:rgba(99,179,255,0.20);
+  --border3:rgba(99,179,255,0.35);
+  --accent:#3B9EFF;
+  --accent2:#5BB3FF;
+  --accent-dim:rgba(59,158,255,0.15);
+  --accent-dim2:rgba(59,158,255,0.08);
+  --green:#22d77a;
+  --green-dim:rgba(34,215,122,0.12);
+  --amber:#f5a623;
+  --amber-dim:rgba(245,166,35,0.12);
+  --red:#ff5252;
+  --red-dim:rgba(255,82,82,0.12);
+  --text:#e8f0fe;
+  --text2:#8ba8cc;
+  --text3:#4d6580;
+  --mono:'DM Mono',monospace;
+  --sans:'DM Sans',sans-serif;
+  --display:'Syne',sans-serif;
+  --radius:12px;
+  --radius-lg:18px;
+  --glow:0 0 40px rgba(59,158,255,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;cursor:default}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
+
+/* PAGE SYSTEM */
+.page{display:none;min-height:100vh;flex-direction:column}
+.page.active{display:flex}
+
+/* ─── SPLASH ─── */
+#page-splash{align-items:center;justify-content:center;background:var(--bg);position:relative;overflow:hidden}
+.splash-grid{position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:48px 48px;animation:gridpan 30s linear infinite;opacity:.6}
+@keyframes gridpan{from{background-position:0 0}to{background-position:48px 48px}}
+.splash-glow{position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(59,158,255,0.07) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);animation:breathe 6s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.1)}}
+.splash-content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:0}
+.splash-logo-ring{width:90px;height:90px;border:1.5px solid var(--border3);border-radius:24px;display:flex;align-items:center;justify-content:center;background:var(--bg2);margin-bottom:28px;position:relative;animation:logobob 3s ease-in-out infinite;box-shadow:0 0 0 8px var(--accent-dim2),0 0 60px rgba(59,158,255,0.1)}
+@keyframes logobob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.splash-wordmark{font-family:var(--display);font-size:52px;font-weight:800;color:var(--text);letter-spacing:-2px;margin-bottom:14px}
+.splash-wordmark span{color:var(--accent)}
+.splash-tagline{font-size:14px;color:var(--text2);text-align:center;max-width:360px;line-height:1.8;margin-bottom:40px;font-weight:300}
+.splash-enter{display:flex;align-items:center;gap:10px;background:var(--accent);color:#fff;border:none;font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:.5px;padding:14px 32px;border-radius:100px;cursor:pointer;transition:all .25s;box-shadow:0 8px 32px rgba(59,158,255,0.3)}
+.splash-enter:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(59,158,255,0.45);background:#5BB3FF}
+.splash-stats{position:absolute;bottom:48px;display:flex;gap:48px}
+.ss{text-align:center}
+.ss-n{font-family:var(--display);font-size:28px;font-weight:800;color:var(--accent);display:block}
+.ss-l{font-size:11px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+.splash-corner{position:absolute;bottom:0;right:0;width:240px;height:240px;background:radial-gradient(circle at bottom right,rgba(59,158,255,0.06),transparent 70%)}
+
+/* ─── ROLE SELECTOR ─── */
+#page-roles{align-items:center;justify-content:center;background:var(--bg);padding:40px 24px;position:relative;overflow:hidden}
+#page-roles::before{content:'';position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:48px 48px;opacity:.4}
+.roles-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;width:100%;max-width:860px}
+.roles-wordmark{font-family:var(--display);font-size:32px;font-weight:800;color:var(--text);letter-spacing:-1px;margin-bottom:6px}
+.roles-wordmark span{color:var(--accent)}
+.roles-sub{font-size:13px;color:var(--text3);margin-bottom:36px}
+.roles-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;width:100%}
+.role-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px 24px;cursor:pointer;transition:all .3s;text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;position:relative;overflow:hidden}
+.role-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,var(--accent-dim2),transparent 60%);opacity:0;transition:.3s}
+.role-card:hover{border-color:var(--border3);transform:translateY(-4px);box-shadow:0 20px 60px rgba(0,0,0,0.4),0 0 0 1px var(--border2)}
+.role-card:hover::before{opacity:1}
+.role-icon-wrap{width:60px;height:60px;border-radius:16px;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;background:var(--bg3)}
+.role-name{font-family:var(--display);font-size:18px;font-weight:700;color:var(--text)}
+.role-desc{font-size:12px;color:var(--text2);line-height:1.7;font-weight:300}
+.role-badge{font-size:10px;font-weight:600;padding:5px 14px;border-radius:100px;letter-spacing:.5px;text-transform:uppercase}
+.rb-admin{background:rgba(59,158,255,0.12);color:var(--accent);border:1px solid rgba(59,158,255,0.25)}
+.rb-shipper{background:rgba(34,215,122,0.12);color:var(--green);border:1px solid rgba(34,215,122,0.25)}
+.rb-receiver{background:rgba(245,166,35,0.12);color:var(--amber);border:1px solid rgba(245,166,35,0.25)}
+
+/* ─── BACK PILL ─── */
+.back-pill{display:inline-flex;align-items:center;gap:8px;font-size:11px;color:var(--text2);border:1px solid var(--border);border-radius:100px;padding:7px 16px;cursor:pointer;background:var(--bg2);margin-bottom:20px;transition:all .2s;font-family:var(--sans);letter-spacing:.3px;align-self:flex-start}
+.back-pill:hover{border-color:var(--border3);color:var(--text);background:var(--bg3)}
+
+/* ─── DASHBOARD WRAPPER ─── */
+.db-wrap{background:var(--bg);padding:20px 24px}
+
+/* ─── TOP BAR ─── */
+.topbar{display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px 20px;margin-bottom:20px}
+.db-brand{display:flex;align-items:center;gap:12px}
+.brand-icon{width:36px;height:36px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.brand-name{font-family:var(--display);font-size:16px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+.brand-sub{font-size:10px;color:var(--text3);margin-top:1px;letter-spacing:.5px;text-transform:uppercase}
+.topright{display:flex;align-items:center;gap:10px}
+.badge-live{display:flex;align-items:center;gap:6px;background:var(--green-dim);border:1px solid rgba(34,215,122,0.25);border-radius:100px;padding:6px 14px;font-size:11px;font-weight:600;color:var(--green);letter-spacing:.3px}
+.dot-live{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,215,122,0.6)}70%{box-shadow:0 0 0 6px rgba(34,215,122,0)}}
+.user-chip{display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:100px;padding:5px 14px 5px 6px;font-size:12px;color:var(--text2);background:var(--bg3)}
+.av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;letter-spacing:.5px}
+.av-admin{background:rgba(59,158,255,0.2);color:var(--accent)}
+.av-shipper{background:rgba(34,215,122,0.2);color:var(--green)}
+.av-receiver{background:rgba(245,166,35,0.2);color:var(--amber)}
+
+/* ─── SECTION LABEL ─── */
+.sec-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+
+/* ─── METRICS STRIP ─── */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.mc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:relative;overflow:hidden;transition:border-color .2s}
+.mc:hover{border-color:var(--border2)}
+.mc::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:2px 2px 0 0}
+.mc.c-blue::after{background:var(--accent)}
+.mc.c-green::after{background:var(--green)}
+.mc.c-amber::after{background:var(--amber)}
+.mc.c-red::after{background:var(--red)}
+.mc-lbl{font-size:11px;color:var(--text3);margin-bottom:8px;letter-spacing:.3px}
+.mc-val{font-family:var(--display);font-size:28px;font-weight:800;color:var(--text);line-height:1;margin-bottom:6px}
+.mbadge{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:3px 10px;border-radius:100px;letter-spacing:.3px}
+.b-ok{background:var(--green-dim);color:var(--green);border:1px solid rgba(34,215,122,0.2)}
+.b-warn{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,0.2)}
+.b-info{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(59,158,255,0.2)}
+.b-danger{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,82,82,0.2)}
+
+/* ─── GRID LAYOUTS ─── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.full-col{margin-bottom:16px}
+
+/* ─── CARD ─── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;transition:border-color .2s}
+.card-title{font-family:var(--display);font-size:13px;font-weight:700;color:var(--text);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;letter-spacing:-.2px}
+
+/* ─── SHIPMENT ROWS ─── */
+.srow{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);font-size:13px;transition:background .15s;border-radius:4px;cursor:default}
+.srow:last-child{border-bottom:none;padding-bottom:0}
+.sid{font-family:var(--display);font-weight:700;color:var(--text);font-size:13px}
+.sroute{font-size:11px;color:var(--text3);margin-top:3px}
+.pill{font-size:10px;font-weight:600;padding:5px 12px;border-radius:100px;letter-spacing:.4px;text-transform:uppercase}
+.p-tr{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(59,158,255,0.2)}
+.p-dl{background:var(--green-dim);color:var(--green);border:1px solid rgba(34,215,122,0.2)}
+.p-ar{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,82,82,0.2)}
+.p-pd{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,0.2)}
+
+/* ─── SENSOR BLOCK ─── */
+.sensor-block{display:flex;flex-direction:column;gap:14px}
+.sensor-row{display:flex;align-items:center;justify-content:space-between}
+.sn-name{font-size:12px;color:var(--text3)}
+.sn-val{font-family:var(--display);font-size:20px;font-weight:800;color:var(--text)}
+.sn-unit{font-size:11px;color:var(--text3);margin-left:2px}
+.bar-track{height:4px;background:var(--bg4);border-radius:2px;margin-top:6px;overflow:hidden}
+.bar-fill{height:100%;border-radius:2px;transition:width .6s ease}
+.bar-ok{background:var(--green)}
+.bar-warn{background:var(--amber)}
+.bar-hot{background:var(--red)}
+
+/* ─── MAP ─── */
+.map-div{width:100%;height:280px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);overflow:hidden}
+
+/* ─── AI RISK ─── */
+.sp-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.sp-item:last-child{border-bottom:none}
+.rb-wrap{width:90px;height:4px;background:var(--bg4);border-radius:2px;overflow:hidden}
+.rb-fill{height:100%;border-radius:2px}
+
+/* ─── EVENTS LOG ─── */
+.crow{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.crow:last-child{border-bottom:none}
+.cdot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;box-shadow:0 0 8px currentColor}
+.cev{font-size:12px;color:var(--text);font-weight:500}
+.chash{font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:3px}
+.ctime{font-size:10px;color:var(--text3);margin-top:2px}
+
+/* ─── ESCROW ─── */
+.erow{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px}
+.erow:last-child{border-bottom:none}
+.eamt{font-family:var(--display);font-weight:800;font-size:16px;color:var(--text);margin-bottom:3px}
+
+/* ─── ACTION BUTTONS ─── */
+.action-btn{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:7px 14px;border-radius:100px;cursor:pointer;border:none;transition:all .2s;letter-spacing:.3px}
+.btn-approve{background:var(--green-dim);color:var(--green);border:1px solid rgba(34,215,122,0.25)}
+.btn-approve:hover{background:rgba(34,215,122,0.2)}
+.btn-dispute{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,82,82,0.25)}
+.btn-dispute:hover{background:rgba(255,82,82,0.2)}
+.btn-add{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--bg);background:var(--accent);border:none;border-radius:100px;padding:7px 16px;cursor:pointer;transition:all .2s;letter-spacing:.3px;font-family:var(--display)}
+.btn-add:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 16px rgba(59,158,255,0.3)}
+
+/* ─── RBAC TABLE ─── */
+.rbac-table{width:100%;font-size:12px;border-collapse:collapse}
+.rbac-table th{font-size:10px;color:var(--text3);font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:6px 0;text-align:center}
+.rbac-table th:first-child{text-align:left}
+.rbac-table td{padding:8px 0;border-top:1px solid var(--border);color:var(--text2);text-align:center;font-size:12px}
+.rbac-table td:first-child{text-align:left;color:var(--text);font-weight:500}
+
+/* ─── FOOTER BAR ─── */
+.footer-bar{display:flex;align-items:center;justify-content:space-between;padding-top:16px;border-top:1px solid var(--border);font-size:10px;color:var(--text3);margin-top:8px;letter-spacing:.3px}
+.footer-bar span b{color:var(--text2);font-weight:500}
+
+/* ─── MODAL ─── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:999;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:28px;width:100%;max-width:540px;max-height:92vh;overflow-y:auto;box-shadow:0 40px 120px rgba(0,0,0,0.6),0 0 60px rgba(59,158,255,0.06)}
+.modal-title{font-family:var(--display);font-size:17px;font-weight:800;color:var(--text);margin-bottom:22px;display:flex;align-items:center;justify-content:space-between;letter-spacing:-.3px}
+.modal-close{cursor:pointer;font-size:18px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;transition:.2s}
+.modal-close:hover{color:var(--text);border-color:var(--border3)}
+.form-row{margin-bottom:14px}
+.form-label{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;display:block;letter-spacing:.5px;text-transform:uppercase}
+.form-input,.form-select{width:100%;padding:10px 14px;border:1px solid var(--border2);border-radius:var(--radius);font-size:13px;color:var(--text);background:var(--bg3);outline:none;font-family:var(--sans);transition:border-color .2s}
+.form-select option{background:var(--bg3);color:var(--text)}
+.form-input:focus,.form-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim2)}
+.form-input::placeholder{color:var(--text3)}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.btn-primary{background:var(--accent);color:#fff;border:none;border-radius:var(--radius);padding:13px 24px;font-size:13px;font-weight:700;cursor:pointer;width:100%;transition:all .2s;font-family:var(--display);letter-spacing:.3px;box-shadow:0 4px 20px rgba(59,158,255,0.25)}
+.btn-primary:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 8px 30px rgba(59,158,255,0.35)}
+
+/* ─── LEAFLET DARK ─── */
+.leaflet-container{background:var(--bg3) !important}
+.leaflet-tile-pane{filter:brightness(0.7) saturate(0.5) hue-rotate(195deg)}
+.leaflet-popup-content-wrapper{background:var(--bg2);color:var(--text);border:1px solid var(--border2);box-shadow:0 8px 32px rgba(0,0,0,0.5);border-radius:10px;font-family:var(--sans);font-size:12px}
+.leaflet-popup-tip{background:var(--bg2)}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:700px){
+  .metrics{grid-template-columns:1fr 1fr}
+  .two-col{grid-template-columns:1fr}
+  .roles-grid{grid-template-columns:1fr}
+  .db-wrap{padding:14px}
+  .splash-stats{display:none}
+}
+
+</style>
+</head>
+<body>
+<!-- ══ SPLASH ══ -->
+
+<div id="page-splash" class="page active">
+  <div class="splash-grid"></div>
+  <div class="splash-glow"></div>
+  <div class="splash-corner"></div>
+  <div class="splash-content">
+    <div class="splash-logo-ring">
+      <svg width="46" height="46" viewBox="0 0 46 46" fill="none">
+        <rect x="5" y="5" width="14" height="14" rx="3.5" fill="white" opacity="0.9"/>
+        <rect x="27" y="5" width="14" height="14" rx="3.5" fill="white" opacity="0.4"/>
+        <rect x="5" y="27" width="14" height="14" rx="3.5" fill="white" opacity="0.4"/>
+        <rect x="27" y="27" width="14" height="14" rx="3.5" fill="white" opacity="0.9"/>
+        <line x1="19" y1="12" x2="27" y2="12" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="19" y1="34" x2="27" y2="34" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="12" y1="19" x2="12" y2="27" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="34" y1="19" x2="34" y2="27" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+        <circle cx="12" cy="12" r="2.5" fill="#5BB3FF"/>
+        <circle cx="34" cy="34" r="2.5" fill="#5BB3FF"/>
+      </svg>
+    </div>
+    <div class="splash-wordmark">Logi<span>Trust</span></div>
+    <p class="splash-tagline">Trustless logistics — powered by IoT, secured by blockchain, made intelligent by AI.</p>
+    <button class="splash-enter" onclick="showPage('page-roles')">
+      Get Started
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7,2 12,7 7,12"/><line x1="2" y1="7" x2="12" y2="7"/></svg>
+    </button>
+  </div>
+  <div class="splash-stats">
+    <div class="ss"><span class="ss-n">5</span><span class="ss-l">System Layers</span></div>
+    <div class="ss"><span class="ss-n">3+</span><span class="ss-l">IoT Sensors</span></div>
+    <div class="ss"><span class="ss-n">AI</span><span class="ss-l">Spoilage Pred.</span></div>
+    <div class="ss"><span class="ss-n">0x</span><span class="ss-l">Blockchain</span></div>
+  </div>
+</div>
+
+
+
+<!-- ══ ROLE SELECTOR ══ -->
+
+<div id="page-roles" class="page" style="align-items:center;justify-content:center">
+  <div class="roles-inner">
+    <button class="back-pill" style="margin-bottom:28px;align-self:flex-start" onclick="showPage('page-splash')">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="7,2 3,6 7,10"/><line x1="3" y1="6" x2="10" y2="6"/></svg>
+      Back
+    </button>
+    <div class="roles-wordmark">Logi<span>Trust</span></div>
+    <div class="roles-sub">Select your role to access the dashboard</div>
+    <div class="roles-grid">
+      <div class="role-card" onclick="login('ADMIN')">
+        <div class="role-icon-wrap">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <rect x="4" y="4" width="8" height="8" rx="2" fill="#3B9EFF"/>
+            <rect x="16" y="4" width="8" height="8" rx="2" fill="#3B9EFF" opacity="0.4"/>
+            <rect x="4" y="16" width="8" height="8" rx="2" fill="#3B9EFF" opacity="0.4"/>
+            <rect x="16" y="16" width="8" height="8" rx="2" fill="#3B9EFF"/>
+            <line x1="12" y1="8" x2="16" y2="8" stroke="#3B9EFF" stroke-width="1.5"/>
+            <line x1="12" y1="20" x2="16" y2="20" stroke="#3B9EFF" stroke-width="1.5"/>
+            <line x1="8" y1="12" x2="8" y2="16" stroke="#3B9EFF" stroke-width="1.5"/>
+            <line x1="20" y1="12" x2="20" y2="16" stroke="#3B9EFF" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div class="role-name">Admin</div>
+        <div class="role-desc">Full platform visibility — all shipments, sensor feeds, escrow contracts, and blockchain logs.</div>
+        <span class="role-badge rb-admin">Full Access</span>
+      </div>
+      <div class="role-card" onclick="login('SHIPPER')">
+        <div class="role-icon-wrap">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <rect x="3" y="10" width="18" height="12" rx="2" fill="none" stroke="#22d77a" stroke-width="1.5" opacity="0.7"/>
+            <path d="M21 14h3l2 4v4h-5V14z" fill="none" stroke="#22d77a" stroke-width="1.5"/>
+            <circle cx="8" cy="22" r="2" fill="#22d77a"/>
+            <circle cx="18" cy="22" r="2" fill="#22d77a"/>
+            <line x1="8" y1="10" x2="8" y2="6" stroke="#22d77a" stroke-width="1.5"/>
+            <line x1="8" y1="6" x2="16" y2="6" stroke="#22d77a" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div class="role-name">Shipper</div>
+        <div class="role-desc">Register shipments, track outgoing goods, monitor sensor readings and escrow status.</div>
+        <span class="role-badge rb-shipper">Outgoing Only</span>
+      </div>
+      <div class="role-card" onclick="login('RECEIVER')">
+        <div class="role-icon-wrap">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <rect x="6" y="12" width="16" height="12" rx="2" fill="none" stroke="#f5a623" stroke-width="1.5" opacity="0.7"/>
+            <path d="M10 12V9a4 4 0 018 0v3" stroke="#f5a623" stroke-width="1.5" fill="none"/>
+            <circle cx="14" cy="18" r="2" fill="#f5a623"/>
+          </svg>
+        </div>
+        <div class="role-name">Receiver</div>
+        <div class="role-desc">View incoming shipments, check compliance reports, and approve or dispute escrow releases.</div>
+        <span class="role-badge rb-receiver">Incoming Only</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<script src="config.js"></script>
+<script>
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0,0);
+  }
+  function login(role) {
+    window.location.href = API_BASE + '/auth/google?role=' + role;
+  }
+</script>
+</body>
+</html>
