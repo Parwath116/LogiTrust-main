@@ -4,8 +4,14 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>LogiTrust — Smart Supply Chain</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<script>
+  (function(){
+    var t = localStorage.getItem('logitrust_theme');
+    if (!t) { t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
 <style>
 :root{
   --bg:#06090f;
@@ -156,6 +162,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 .p-dl{background:var(--green-dim);color:var(--green);border:1px solid rgba(34,215,122,0.2)}
 .p-ar{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,82,82,0.2)}
 .p-pd{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,166,35,0.2)}
+.p-rs{background:var(--green-dim);color:var(--green);border:1px solid rgba(34,215,122,0.2)}
+.p-rf{background:rgba(180,120,255,0.15);color:#b478ff;border:1px solid rgba(180,120,255,0.25)}
 
 /* ─── SENSOR BLOCK ─── */
 .sensor-block{display:flex;flex-direction:column;gap:14px}
@@ -243,6 +251,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
   .splash-stats{display:none}
 }
 </style>
+<link rel="stylesheet" href="ui.css"/>
 </head>
 <body>
 
@@ -328,11 +337,26 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
       <div><div class="brand-name">LogiTrust</div><div class="brand-sub">Admin Console</div></div>
     </div>
     
-    <div class="topright">
+    <div class="topright topright-desktop">
       <div class="badge-live"><div class="dot-live"></div>Live</div>
-
+      <button class="theme-btn theme-toggle-btn" type="button" aria-label="Toggle theme" title="Toggle Theme (T)">
+        <span class="theme-toggle-icon">🌙</span>
+      </button>
       <div class="user-chip"><div class="av av-admin db-user-init">AD</div><span class="db-user-name">Admin</span></div>
+      <button class="logout-btn logout-trigger" type="button" aria-label="Logout">Logout</button>
     </div>
+    <button class="mobile-hamburger" type="button" aria-label="Toggle navigation">
+      <span>☰</span>
+    </button>
+  </div>
+  <div class="mobile-drawer" id="mobile-drawer">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="user-chip"><div class="av av-admin db-user-init">AD</div><span class="db-user-name">Admin</span></div>
+      <button class="theme-btn theme-toggle-btn" type="button" aria-label="Toggle theme">
+        <span class="theme-toggle-icon">🌙</span>
+      </button>
+    </div>
+    <button class="logout-btn logout-trigger" type="button" style="width:100%" aria-label="Logout">Logout</button>
   </div>
   <div class="sec-label">Platform Overview</div>
   <div class="metrics">
@@ -366,6 +390,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
         </div>
         <div class="sensor-row"><span class="sn-name">GPS Status</span><span class="mbadge b-ok" id="admin-gps-lock">--</span></div>
         <div class="sensor-row"><span class="sn-name">Spoilage Risk</span><span class="mbadge b-ok" id="admin-risk">--</span></div>
+        <div class="sensor-row"><span class="sn-name">Blockchain Status</span><span id="admin-chain-status">--</span></div>
         <div class="sensor-row"><span class="sn-name">Last Signed Payload</span><span id="admin-time" style="font-size:11px;color:var(--text3);font-family:var(--mono)">--</span></div>
       </div>
     </div>
@@ -426,11 +451,26 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
       <div><div class="brand-name">LogiTrust</div><div class="brand-sub">Shipper Portal</div></div>
     </div>
     
-    <div class="topright">
+    <div class="topright topright-desktop">
       <div class="badge-live"><div class="dot-live"></div>Live</div>
-
-      <div class="user-chip"><div class="av av-shipper db-user-init">YB</div><span class="db-user-name">Yashas B C</span></div>
+      <button class="theme-btn theme-toggle-btn" type="button" aria-label="Toggle theme" title="Toggle Theme (T)">
+        <span class="theme-toggle-icon">🌙</span>
+      </button>
+      <div class="user-chip"><div class="av av-shipper db-user-init">YB</div><span class="db-user-name">Shipper</span></div>
+      <button class="logout-btn logout-trigger" type="button" aria-label="Logout">Logout</button>
     </div>
+    <button class="mobile-hamburger" type="button" aria-label="Toggle navigation">
+      <span>☰</span>
+    </button>
+  </div>
+  <div class="mobile-drawer" id="mobile-drawer-shipper">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="user-chip"><div class="av av-shipper db-user-init">YB</div><span class="db-user-name">Shipper</span></div>
+      <button class="theme-btn theme-toggle-btn" type="button" aria-label="Toggle theme">
+        <span class="theme-toggle-icon">🌙</span>
+      </button>
+    </div>
+    <button class="logout-btn logout-trigger" type="button" style="width:100%" aria-label="Logout">Logout</button>
   </div>
   <div class="sec-label">My Outgoing Shipments</div>
   <div class="metrics" style="grid-template-columns:repeat(3,1fr)">
@@ -464,6 +504,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
         </div>
         <div class="sensor-row"><span class="sn-name">GPS Status</span><span class="mbadge b-ok" id="shipper-gps-lock">--</span></div>
         <div class="sensor-row"><span class="sn-name">Spoilage Risk</span><span class="mbadge b-ok" id="shipper-risk">--</span></div>
+        <div class="sensor-row"><span class="sn-name">Blockchain Status</span><span id="shipper-chain-status">--</span></div>
         <div class="sensor-row"><span class="sn-name">Last Signed Payload</span><span id="shipper-time" style="font-size:11px;color:var(--text3);font-family:var(--mono)">--</span></div>
       </div>
     </div>
@@ -503,11 +544,26 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
       <div><div class="brand-name">LogiTrust</div><div class="brand-sub">Receiver Portal</div></div>
     </div>
     
-    <div class="topright">
+    <div class="topright topright-desktop">
       <div class="badge-live"><div class="dot-live"></div>Live</div>
-
-      <div class="user-chip"><div class="av av-receiver db-user-init">PK</div><span class="db-user-name">Parwath Sri Raju K</span></div>
+      <button class="theme-btn theme-toggle-btn" type="button" aria-label="Toggle theme" title="Toggle Theme (T)">
+        <span class="theme-toggle-icon">🌙</span>
+      </button>
+      <div class="user-chip"><div class="av av-receiver db-user-init">PK</div><span class="db-user-name">Receiver</span></div>
+      <button class="logout-btn logout-trigger" type="button" aria-label="Logout">Logout</button>
     </div>
+    <button class="mobile-hamburger" type="button" aria-label="Toggle navigation">
+      <span>☰</span>
+    </button>
+  </div>
+  <div class="mobile-drawer" id="mobile-drawer-receiver">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="user-chip"><div class="av av-receiver db-user-init">PK</div><span class="db-user-name">Receiver</span></div>
+      <button class="theme-btn theme-toggle-btn" type="button" aria-label="Toggle theme">
+        <span class="theme-toggle-icon">🌙</span>
+      </button>
+    </div>
+    <button class="logout-btn logout-trigger" type="button" style="width:100%" aria-label="Logout">Logout</button>
   </div>
   <div class="sec-label">Incoming Shipments</div>
   <div class="metrics" style="grid-template-columns:repeat(3,1fr)">
@@ -535,6 +591,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
         </div>
         <div class="sensor-row"><span class="sn-name">GPS Status</span><span class="mbadge b-ok" id="receiver-gps-lock">--</span></div>
         <div class="sensor-row"><span class="sn-name">Spoilage Risk</span><span class="mbadge b-ok" id="receiver-risk">--</span></div>
+        <div class="sensor-row"><span class="sn-name">Blockchain Status</span><span id="receiver-chain-status">--</span></div>
         <div class="sensor-row"><span class="sn-name">Last Signed Payload</span><span id="receiver-time" style="font-size:11px;color:var(--text3);font-family:var(--mono)">--</span></div>
       </div>
     </div>
@@ -592,6 +649,10 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
           <option value="custom">Type custom…</option>
         </select>
         <input class="form-input" id="f-dest-custom" type="text" placeholder="Enter city name" style="display:none;margin-top:8px"/>
+        <div id="f-dest-coords-container" style="display:none;margin-top:8px;gap:6px">
+          <input class="form-input" id="f-dest-lat" type="number" step="any" placeholder="Dest Lat (optional)" style="font-size:11px;flex:1"/>
+          <input class="form-input" id="f-dest-lon" type="number" step="any" placeholder="Dest Lon (optional)" style="font-size:11px;flex:1"/>
+        </div>
       </div>
     </div>
     <div class="form-row-2">
@@ -600,7 +661,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
     </div>
     <div class="form-row-2">
       <div><label class="form-label">Dispatch Date</label><input class="form-input" id="f-date" type="date"/></div>
-      <div><label class="form-label">Escrow Value (ETH)</label><input class="form-input" id="f-escrow" type="number" step="0.0001" placeholder="e.g. 0.001"/></div>
+      <div><label class="form-label">Escrow Value (₹)</label><input class="form-input" id="f-escrow" type="number" step="1" placeholder="e.g. 50000"/></div>
     </div>
     <div class="form-row-2">
       <div>
@@ -616,9 +677,10 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
   </div>
 </div>
 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="config.js"></script>
 <script src="api.js?v=2"></script>
+<script src="ui.js"></script>
 <script>
 // ── AUTH GUARD ──────────────────────────────────────────────
 if (!LogiTrustAPI.isLoggedIn()) {
@@ -626,6 +688,50 @@ if (!LogiTrustAPI.isLoggedIn()) {
 }
 var currentUser = null;
 var activeShipmentId = null;
+
+function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+document.addEventListener('click', function(e) {
+  var sel = e.target.closest('.shipment-row-click');
+  if (sel) {
+    var sid = sel.getAttribute('data-shipment-id');
+    if (sid) selectShipment(sid);
+    return;
+  }
+  var adm = e.target.closest('.admin-resolve-btn');
+  if (adm) {
+    var sid = adm.getAttribute('data-shipment-id');
+    var act = adm.getAttribute('data-action');
+    if (sid && act) adminResolve(sid, act);
+    return;
+  }
+  var dly = e.target.closest('.flag-delay-btn');
+  if (dly) {
+    var sid = dly.getAttribute('data-shipment-id');
+    if (sid) flagDelay(sid);
+    return;
+  }
+  var app = e.target.closest('.approve-escrow-btn');
+  if (app) {
+    var sid = app.getAttribute('data-shipment-id');
+    if (sid) approveEscrow(app, sid);
+    return;
+  }
+  var dsp = e.target.closest('.dispute-escrow-btn');
+  if (dsp) {
+    var sid = dsp.getAttribute('data-shipment-id');
+    if (sid) disputeEscrow(dsp, sid);
+    return;
+  }
+});
 
 async function bootstrapSession(){
   currentUser = await LogiTrustAPI.me();
@@ -637,7 +743,19 @@ async function bootstrapSession(){
   var roleMap = { ADMIN:'page-admin', SHIPPER:'page-shipper', RECEIVER:'page-receiver' };
   showPage(roleMap[currentUser.role]);
   initMap(currentUser.role.toLowerCase());
+
+  // Render shimmer skeletons on FIRST load only (polling does not flicker)
+  if (!window._firstLoadComplete) {
+    LogiTrustUI.renderSkeletons('admin-shipment-list', 3, 'row');
+    LogiTrustUI.renderSkeletons('shipper-shipment-list', 3, 'row');
+    LogiTrustUI.renderSkeletons('receiver-shipment-list', 3, 'row');
+    LogiTrustUI.renderSkeletons('admin-escrow-list', 2, 'row');
+    LogiTrustUI.renderSkeletons('shipper-escrow-list', 2, 'row');
+    LogiTrustUI.renderSkeletons('receiver-escrow-list', 2, 'row');
+  }
+
   await loadShipments();
+  window._firstLoadComplete = true;
   setInterval(loadShipments, 3000); // Live polling!
 }
 
@@ -658,7 +776,12 @@ async function loadShipments(){
   shipments = data.map(function(s){
     return {
       id:s.shipmentCode, item:s.item, origin:s.origin, dest:s.destination,
+      destLat: s.destLat || null, destLon: s.destLon || null,
+      arrivedAt: s.arrivedAt || null,
       status:s.status.toLowerCase(), escrow:s.escrowValue, riskScore:s.riskScore,
+      adminFlagged: Boolean(s.adminFlagged),
+      onChainStatus: s.onChainStatus || 'NOT_REGISTERED',
+      onChainTxHash: s.onChainTxHash || null,
       latestReading: (s.readings && s.readings[0]) ? s.readings[0] : null
     };
   });
@@ -675,20 +798,35 @@ function selectShipment(id) {
   renderActiveShipment();
 }
 
+function getOnChainBadge(status) {
+  if (status === 'REGISTERED') {
+    return '<span class="mbadge b-ok" style="font-size:10px" title="On-chain Sepolia contract active">CHAIN: REGISTERED</span>';
+  } else if (status === 'FAILED') {
+    return '<span class="mbadge b-danger" style="font-size:10px" title="On-chain registration failed">CHAIN: FAILED</span>';
+  } else {
+    return '<span class="mbadge b-warn" style="font-size:10px" title="Not registered on-chain">CHAIN: NOT REGISTERED</span>';
+  }
+}
+
 window.currentMapTarget = null;
 function renderActiveShipment() {
   if (!activeShipmentId) return;
   var s = shipments.find(s => s.id === activeShipmentId);
   if (!s) return;
   
+  var r = s.latestReading;
+  
   ['admin', 'shipper', 'receiver'].forEach(function(role) {
     var title = document.getElementById(role + '-sensor-title');
     if (title) title.textContent = 'Live Sensor — ' + s.id;
     var gpsTitle = document.getElementById(role + '-gps-title');
-    if (gpsTitle) gpsTitle.textContent = 'GPS Tracking — ' + s.id + ' (' + s.origin + ' → ' + s.dest + ')';
+    if (gpsTitle) {
+      var simBadge = (r && r.source === 'SIMULATED') ? ' <span class="mbadge b-warn" style="font-size:10px;margin-left:6px">Simulated location</span>' : '';
+      gpsTitle.innerHTML = 'GPS Tracking — ' + escapeHtml(s.id) + ' (' + escapeHtml(s.origin) + ' → ' + escapeHtml(s.dest) + ')' + simBadge;
+    }
+    var chainEl = document.getElementById(role + '-chain-status');
+    if (chainEl) chainEl.innerHTML = getOnChainBadge(s.onChainStatus);
   });
-
-  var r = s.latestReading;
   
   ['admin', 'shipper', 'receiver'].forEach(function(role) {
     if (r) {
@@ -710,12 +848,15 @@ function renderActiveShipment() {
       
       var lockEl = document.getElementById(role + '-gps-lock');
       if (lockEl) {
-        if (r.simulatedLocation) {
-          lockEl.textContent = 'Approximate Location';
+        if (r.source === 'SIMULATED') {
+          lockEl.textContent = 'Simulated location';
           lockEl.className = 'mbadge b-warn';
+        } else if (r.gpsLock) {
+          lockEl.textContent = 'GPS Lock Acquired';
+          lockEl.className = 'mbadge b-ok';
         } else {
-          lockEl.textContent = r.gpsLock ? 'Lock Acquired' : 'Searching...'; 
-          lockEl.className = r.gpsLock ? 'mbadge b-ok' : 'mbadge b-warn';
+          lockEl.textContent = 'No GPS Lock';
+          lockEl.className = 'mbadge b-danger';
         }
       }
       
@@ -738,14 +879,15 @@ function renderActiveShipment() {
 
   var isNewTarget = (window.currentMapTarget !== s.id);
   
-  if (r && r.lat && r.lon && !r.simulatedLocation) {
+  if (r && r.lat && r.lon && r.gpsLock) {
+    var popupText = (r.source === 'SIMULATED' ? 'Simulated: ' : 'Live GPS: ') + s.id + (s.arrivedAt ? ' (Arrived 🎯)' : '');
     if (shipperMap && shipperLayer) {
       if (window.truckMarker) { shipperMap.removeLayer(window.truckMarker); window.truckMarker = null; }
       if (window.truckTimeout) { clearTimeout(window.truckTimeout); window.truckTimeout = null; }
       shipperLayer.clearLayers();
       var m = L.marker([r.lat, r.lon], {icon:makeTruckIcon()}).addTo(shipperLayer);
       if (isNewTarget) {
-        m.bindPopup('Live: ' + s.id).openPopup();
+        m.bindPopup(popupText).openPopup();
         shipperMap.setView([r.lat, r.lon], 12);
       }
     }
@@ -755,12 +897,12 @@ function renderActiveShipment() {
       receiverLayer.clearLayers();
       var m = L.marker([r.lat, r.lon], {icon:makeTruckIcon()}).addTo(receiverLayer);
       if (isNewTarget) {
-        m.bindPopup('Live: ' + s.id).openPopup();
+        m.bindPopup(popupText).openPopup();
         receiverMap.setView([r.lat, r.lon], 12);
       }
     }
   } else {
-    // Map simulation
+    // Map simulation route display
     var coords = generateRoute(s.origin, s.dest);
     if (coords.length > 0) {
       if (shipperMap && currentUser.role === 'SHIPPER') {
@@ -774,13 +916,17 @@ function renderActiveShipment() {
 }
 
 function renderShipmentLists(){
-  var statusPill = { pending:'<span class="pill p-pd">Pending Pickup</span>',
-    in_transit:'<span class="pill p-tr">In Transit</span>',
-    delivered:'<span class="pill p-dl">Delivered</span>',
-    disputed:'<span class="pill p-rk">Disputed</span>' };
+  var statusPill = {
+    pending: '<span class="pill p-pd">Pending Pickup</span>',
+    in_transit: '<span class="pill p-tr">In Transit</span>',
+    delivered: '<span class="pill p-dl">Delivered</span>',
+    disputed: '<span class="pill p-ar">Disputed</span>',
+    resolved: '<span class="pill p-rs">Resolved</span>',
+    refunded: '<span class="pill p-rf">Refunded</span>'
+  };
   var html = shipments.map(function(s){
     var isActive = s.id === activeShipmentId ? 'border: 1px solid var(--accent);' : '';
-    return '<div class="srow" style="cursor:pointer;'+isActive+'" onclick="selectShipment(\''+s.id+'\')"><div><div class="sid">'+s.id+'</div><div class="sroute">'+s.origin+' → '+s.dest+' · '+s.item+'</div></div>'+(statusPill[s.status]||'')+'</div>';
+    return '<div class="srow shipment-row-click" style="cursor:pointer;'+isActive+'" data-shipment-id="'+escapeHtml(s.id)+'"><div><div class="sid">'+escapeHtml(s.id)+'</div><div class="sroute">'+escapeHtml(s.origin)+' → '+escapeHtml(s.dest)+' · '+escapeHtml(s.item)+'</div></div>'+(statusPill[s.status]||'')+'</div>';
   }).join('');
   
   ['admin-shipment-list','shipper-shipment-list','receiver-shipment-list'].forEach(function(lid){
@@ -793,21 +939,23 @@ function renderShipmentLists(){
   
   // Escrow lists rendering for Shipper and Receiver
   var shipperEscrowHtml = shipments.map(function(s){
-    return '<div class="erow"><div><div style="font-family:var(--display);font-weight:700;font-size:13px">'+s.id+' — ₹'+s.escrow+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">'+s.origin+' → '+s.dest+' · '+s.item+'</div></div><span class="mbadge b-info" style="margin-top:4px">'+s.status.toUpperCase()+'</span></div>';
+    var onChainBadge = getOnChainBadge(s.onChainStatus);
+    return '<div class="erow"><div><div style="font-family:var(--display);font-weight:700;font-size:13px">'+escapeHtml(s.id)+' — ₹'+s.escrow+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">'+escapeHtml(s.origin)+' → '+escapeHtml(s.dest)+' · '+escapeHtml(s.item)+'</div></div><div style="display:flex;gap:6px;align-items:center">'+onChainBadge+'<span class="mbadge b-info">'+s.status.toUpperCase()+'</span></div></div>';
   }).join('');
   
   var receiverEscrowHtml = shipments.map(function(s){
     var actions = '';
+    var onChainBadge = getOnChainBadge(s.onChainStatus);
     if (s.status === 'pending') {
       actions = '<div style="font-size:10px;color:var(--text3);margin-top:6px">Waiting for pickup...</div>';
     } else if(s.status === 'in_transit') {
-      if (window.globalTruckArrivals && window.globalTruckArrivals[s.id]) {
-        actions = '<div style="display:flex;gap:8px;margin-top:6px"><button class="action-btn btn-approve" onclick="LogiTrustAPI.approveEscrow(\''+s.id+'\').then(loadShipments)">Approve Release</button><button class="action-btn btn-dispute" onclick="LogiTrustAPI.disputeEscrow(\''+s.id+'\').then(loadShipments)">Dispute</button></div>';
+      if (s.arrivedAt) {
+        actions = '<div style="display:flex;gap:8px;margin-top:6px"><button class="action-btn btn-approve approve-escrow-btn" data-shipment-id="'+escapeHtml(s.id)+'">Approve Release</button><button class="action-btn btn-dispute dispute-escrow-btn" data-shipment-id="'+escapeHtml(s.id)+'">Dispute</button></div>';
       } else {
-        actions = '<div style="font-size:10px;color:var(--text3);margin-top:6px">Shipment in transit...</div>';
+        actions = '<div style="display:flex;gap:8px;align-items:center;margin-top:6px"><span style="font-size:10px;color:var(--text3)">In transit (awaiting geofence arrival)</span><button class="action-btn btn-dispute dispute-escrow-btn" style="padding:2px 8px;font-size:10px" data-shipment-id="'+escapeHtml(s.id)+'">Dispute</button></div>';
       }
     }
-    return '<div><div class="erow"><div><div style="font-family:var(--display);font-weight:700;font-size:13px">'+s.id+' — ₹'+s.escrow+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">'+s.origin+' → '+s.dest+' · '+s.item+'</div></div><span class="mbadge b-info" style="margin-top:4px">'+s.status.toUpperCase()+'</span></div>'+actions+'</div>';
+    return '<div><div class="erow"><div><div style="font-family:var(--display);font-weight:700;font-size:13px">'+escapeHtml(s.id)+' — ₹'+s.escrow+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">'+escapeHtml(s.origin)+' → '+escapeHtml(s.dest)+' · '+escapeHtml(s.item)+'</div></div><div style="display:flex;gap:6px;align-items:center">'+onChainBadge+'<span class="mbadge b-info">'+s.status.toUpperCase()+'</span></div></div>'+actions+'</div>';
   }).join('');
   
   var se = document.getElementById('shipper-escrow-list');
@@ -823,7 +971,7 @@ function renderShipmentLists(){
       if (s.latestReading && s.latestReading.lat && s.latestReading.lon) {
         var riskClass = (s.riskScore||0) <= 30 ? '#22d77a' : (s.riskScore||0) <= 60 ? '#f5a623' : '#ff5252';
         L.marker([s.latestReading.lat, s.latestReading.lon], {icon:makeDotIcon(riskClass)})
-         .bindPopup('<b>' + s.id + '</b><br>' + s.origin + ' → ' + s.dest)
+         .bindPopup('<b>' + escapeHtml(s.id) + '</b><br>' + escapeHtml(s.origin) + ' → ' + escapeHtml(s.dest))
          .addTo(adminLayer);
       }
     });
@@ -891,7 +1039,6 @@ function generateRoute(startCity, endCity) {
 }
 
 window.truckSim = { sId: null, index: 0, marker: null, timeout: null, arrived: false, running: false };
-window.globalTruckArrivals = window.globalTruckArrivals || {};
 
 function manageTruckSimulation(map, coords, status, sId) {
   if (!coords || coords.length === 0) return;
@@ -934,7 +1081,6 @@ function _truckTick() {
     sim.index = sim.coords.length - 1;
     sim.marker.setLatLng(sim.coords[sim.index]);
     sim.arrived = true;
-    window.globalTruckArrivals[sim.sId] = true;
     sim.timeout = setTimeout(_truckTick, 1000);
   } else if (sim.status === 'in_transit') {
     if (sim.index < sim.coords.length - 1) {
@@ -942,11 +1088,7 @@ function _truckTick() {
       sim.marker.setLatLng(sim.coords[sim.index]);
       sim.timeout = setTimeout(_truckTick, 600);
     } else {
-      if (!sim.arrived) {
-        sim.arrived = true;
-        window.globalTruckArrivals[sim.sId] = true;
-        renderShipmentLists();
-      }
+      sim.arrived = true;
       sim.timeout = setTimeout(_truckTick, 1000);
     }
   }
@@ -990,7 +1132,10 @@ function checkCustomOrigin(){
 }
 function checkCustomDest(){
   var v=document.getElementById('f-dest').value;
-  document.getElementById('f-dest-custom').style.display=(v==='custom')?'block':'none';
+  var isCustom = (v==='custom');
+  document.getElementById('f-dest-custom').style.display=isCustom?'block':'none';
+  var coordsEl = document.getElementById('f-dest-coords-container');
+  if (coordsEl) coordsEl.style.display = isCustom ? 'flex' : 'none';
 }
 function getCity(selId,custId){
   var v=document.getElementById(selId).value;
@@ -1002,7 +1147,8 @@ async function submitShipment(){
   var origin=getCity('f-origin','f-origin-custom');
   var dest=getCity('f-dest','f-dest-custom');
   if (origin && dest && origin.toLowerCase() === dest.toLowerCase()) {
-    alert('Origin and Destination cannot be the same city.');
+    if (window.LogiTrustUI) LogiTrustUI.toast('Origin and Destination cannot be the same city.', 'warn');
+    else alert('Origin and Destination cannot be the same city.');
     return;
   }
   var maxTemp=parseFloat(document.getElementById('f-temp').value)||10;
@@ -1010,45 +1156,76 @@ async function submitShipment(){
   var escrow=parseFloat(document.getElementById('f-escrow').value)||0;
   var sensorId = document.getElementById('f-sensor') ? document.getElementById('f-sensor').value.trim() : "";
   var receiverEmail = document.getElementById('f-email') ? document.getElementById('f-email').value.trim() : "";
-  if(!item||!origin||!dest){alert('Please fill in item name, origin and destination.');return;}
+  var destLat = (document.getElementById('f-dest-lat') && document.getElementById('f-dest-lat').value) ? parseFloat(document.getElementById('f-dest-lat').value) : null;
+  var destLon = (document.getElementById('f-dest-lon') && document.getElementById('f-dest-lon').value) ? parseFloat(document.getElementById('f-dest-lon').value) : null;
+
+  if(!item||!origin||!dest){
+    if (window.LogiTrustUI) LogiTrustUI.toast('Please fill in item name, origin and destination.', 'warn');
+    else alert('Please fill in item name, origin and destination.');
+    return;
+  }
 
   var result = await LogiTrustAPI.createShipment({
-    item:item, origin:origin, destination:dest,
+    item:item, origin:origin, destination:dest, destLat:destLat, destLon:destLon,
     maxTemp:maxTemp, maxHumidity:maxHumidity, escrowValue:escrow, assignedSensorId:sensorId, receiverEmail:receiverEmail
   });
-  if(!result || result.error){ alert('Could not register shipment: '+(result&&result.error||'unknown error')); return; }
+  if(!result || result.error){
+    var errMsg = 'Could not register shipment: '+(result&&result.error||'unknown error');
+    if (window.LogiTrustUI) LogiTrustUI.toast(errMsg, 'error'); else alert(errMsg);
+    return;
+  }
 
   closeModal();
   await loadShipments();
-  alert('✅ '+result.shipmentCode+' registered on LogiTrust!\n\n'+
-    (result.onChainTxHash ? 'On-chain tx: '+result.onChainTxHash : 'Saved to database (deploy contracts + set env vars to also write on-chain).')+
-    '\nEscrow locked: ₹'+escrow+'\nRoute: '+origin+' → '+dest);
+  var onChainMsg = result.onChainStatus === 'REGISTERED'
+    ? 'On-chain tx: ' + result.onChainTxHash
+    : result.onChainStatus === 'FAILED'
+    ? '⚠️ On-chain registration failed (see server logs).'
+    : 'Saved to database (off-chain: contracts not configured).';
+  var okMsg = 'Shipment ' + result.shipmentCode + ' registered! ' + onChainMsg + ' (Escrow locked: ₹' + escrow + ')';
+  if (window.LogiTrustUI) {
+    LogiTrustUI.toast(okMsg, 'success', 6000);
+  } else {
+    alert(okMsg);
+  }
 }
 
 async function approveEscrow(btn,shipId){
+  var confirmed = window.LogiTrustUI ? await LogiTrustUI.confirm('Are you sure you want to approve delivery and release escrow funds to the carrier?', 'Approve Escrow Release') : confirm('Approve release of escrow funds?');
+  if (!confirmed) return;
   var row=btn.closest('.erow');
   var res = await LogiTrustAPI.approveEscrow(shipId);
   if(res && !res.error){
-    row.querySelectorAll('.action-btn').forEach(function(b){b.disabled=true;b.style.opacity='0.4'});
-    var badge=document.createElement('div');
-    badge.style.marginTop='8px';
-    badge.innerHTML='<span class="mbadge b-ok">✅ Released — tx '+(res.txHash||'').slice(0,10)+'…</span>';
-    row.appendChild(badge);
+    if (row) {
+      row.querySelectorAll('.action-btn').forEach(function(b){b.disabled=true;b.style.opacity='0.4'});
+      var badge=document.createElement('div');
+      badge.style.marginTop='8px';
+      badge.innerHTML='<span class="mbadge b-ok">✅ Released — tx '+(res.txHash||'').slice(0,10)+'…</span>';
+      row.appendChild(badge);
+    }
+    if (window.LogiTrustUI) LogiTrustUI.toast('Escrow released successfully on-chain!', 'success');
   } else {
-    alert(res && res.error ? 'Error: ' + res.error : 'Release failed — deploy contracts first');
+    var err = (res && res.error ? 'Error: ' + res.error : 'Release failed — deploy contracts first');
+    if (window.LogiTrustUI) LogiTrustUI.toast(err, 'error'); else alert(err);
   }
 }
 async function disputeEscrow(btn,shipId){
+  var confirmed = window.LogiTrustUI ? await LogiTrustUI.confirm('Are you sure you want to raise a dispute for this shipment? This will freeze escrow funds for admin arbitration.', 'Raise Escrow Dispute') : confirm('Raise dispute?');
+  if (!confirmed) return;
   var row=btn.closest('.erow');
   var res = await LogiTrustAPI.disputeEscrow(shipId);
   if(res && !res.error){
-    row.querySelectorAll('.action-btn').forEach(function(b){b.disabled=true;b.style.opacity='0.4'});
-    var badge=document.createElement('div');
-    badge.style.marginTop='8px';
-    badge.innerHTML='<span class="mbadge b-danger">⚠ Dispute raised — tx '+(res.txHash||'').slice(0,10)+'…</span>';
-    row.appendChild(badge);
+    if (row) {
+      row.querySelectorAll('.action-btn').forEach(function(b){b.disabled=true;b.style.opacity='0.4'});
+      var badge=document.createElement('div');
+      badge.style.marginTop='8px';
+      badge.innerHTML='<span class="mbadge b-danger">⚠ Dispute raised — tx '+(res.txHash||'').slice(0,10)+'…</span>';
+      row.appendChild(badge);
+    }
+    if (window.LogiTrustUI) LogiTrustUI.toast('Dispute raised successfully.', 'warn');
   } else {
-    alert(res && res.error ? 'Error: ' + res.error : 'Dispute failed — deploy contracts first');
+    var err = (res && res.error ? 'Error: ' + res.error : 'Dispute failed — deploy contracts first');
+    if (window.LogiTrustUI) LogiTrustUI.toast(err, 'error'); else alert(err);
   }
 }
 
@@ -1064,11 +1241,16 @@ async function fetchNotifications() {
   document.querySelectorAll('#notif-badge').forEach(el => {
     el.onclick = () => {
       if(notifs.length === 0) {
-        alert("No notifications");
+        if (window.LogiTrustUI) LogiTrustUI.toast('No new notifications.', 'info');
+        else alert("No notifications");
         return;
       }
-      let msg = notifs.map(n => n.message).join('\n\n');
-      alert("NOTIFICATIONS:\n\n" + msg);
+      let msg = notifs.map(n => '• ' + n.message).join('\n\n');
+      if (window.LogiTrustUI) {
+        LogiTrustUI.confirm(msg, 'Recent Notifications');
+      } else {
+        alert("NOTIFICATIONS:\n\n" + msg);
+      }
     };
   });
 }
@@ -1082,26 +1264,30 @@ renderShipmentLists = function() {
   
   if (currentUser.role === 'ADMIN') {
     let adminHtml = shipments.map(s => {
-      let bcolor = s.status === 'disputed' ? 'b-danger' : (s.status === 'delivered' ? 'b-ok' : 'b-info');
-      let flagHtml = s.adminFlagged ? `<span class="mbadge b-danger" style="margin-right:10px">🚩 Flagged</span>` : '';
+      let bcolor = s.status === 'disputed' ? 'b-danger' : (s.status === 'delivered' || s.status === 'resolved' ? 'b-ok' : (s.status === 'refunded' ? 'b-warn' : 'b-info'));
+      let flagHtml = s.adminFlagged ? `<span class="mbadge b-danger" style="margin-right:6px">🚩 Flagged</span>` : '';
+      let onChainBadge = getOnChainBadge(s.onChainStatus);
       let actions = '';
       if (s.status === 'disputed' || s.adminFlagged) {
          actions = `
            <div style="margin-top:8px; display:flex; gap:8px">
-             <button class="action-btn btn-approve" onclick="adminResolve('${s.id}', 'RELEASE_FUNDS')">Force Release</button>
-             <button class="action-btn btn-dispute" onclick="adminResolve('${s.id}', 'REFUND_RECEIVER')">Force Refund</button>
+             <button class="action-btn btn-approve admin-resolve-btn" data-shipment-id="${escapeHtml(s.id)}" data-action="RELEASE_FUNDS">Force Release</button>
+             <button class="action-btn btn-dispute admin-resolve-btn" data-shipment-id="${escapeHtml(s.id)}" data-action="REFUND_RECEIVER">Force Refund</button>
            </div>
          `;
       }
       return `
       <div class="erow">
         <div>
-          <div style="font-family:var(--display);font-weight:700;font-size:13px">${s.id} — ₹${s.escrow}</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">${s.origin} → ${s.dest}</div>
+          <div style="font-family:var(--display);font-weight:700;font-size:13px">${escapeHtml(s.id)} — ₹${s.escrow}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${escapeHtml(s.origin)} → ${escapeHtml(s.dest)}</div>
         </div>
         <div style="text-align:right">
-           ${flagHtml}
-           <span class="mbadge ${bcolor}">${s.status.toUpperCase()}</span>
+           <div style="display:flex;gap:6px;justify-content:flex-end;align-items:center">
+             ${flagHtml}
+             ${onChainBadge}
+             <span class="mbadge ${bcolor}">${s.status.toUpperCase()}</span>
+           </div>
            ${actions}
         </div>
       </div>
@@ -1113,24 +1299,28 @@ renderShipmentLists = function() {
 
   if (currentUser.role === 'SHIPPER') {
     let shipperHtml = shipments.map(s => {
-      let bcolor = s.status === 'disputed' ? 'b-danger' : (s.status === 'delivered' ? 'b-ok' : 'b-info');
+      let bcolor = s.status === 'disputed' ? 'b-danger' : (s.status === 'delivered' || s.status === 'resolved' ? 'b-ok' : (s.status === 'refunded' ? 'b-warn' : 'b-info'));
+      let onChainBadge = getOnChainBadge(s.onChainStatus);
       let actions = '';
       if (s.status === 'in_transit' && !s.adminFlagged) {
          actions = `
            <div style="margin-top:8px">
-             <button class="action-btn btn-dispute" onclick="flagDelay('${s.id}')">Flag Delay</button>
+             <button class="action-btn btn-dispute flag-delay-btn" data-shipment-id="${escapeHtml(s.id)}">Flag Delay</button>
            </div>
          `;
       }
       return `
       <div class="erow">
         <div>
-          <div style="font-family:var(--display);font-weight:700;font-size:13px">${s.id}</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">${s.origin} → ${s.dest} · ${s.item}</div>
+          <div style="font-family:var(--display);font-weight:700;font-size:13px">${escapeHtml(s.id)}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${escapeHtml(s.origin)} → ${escapeHtml(s.dest)} · ${escapeHtml(s.item)}</div>
         </div>
         <div style="text-align:right">
            <div class="eamt">₹${s.escrow}</div>
-           <span class="mbadge ${bcolor}">${s.status.toUpperCase()}</span>
+           <div style="display:flex;gap:6px;justify-content:flex-end;align-items:center;margin-top:4px">
+             ${onChainBadge}
+             <span class="mbadge ${bcolor}">${s.status.toUpperCase()}</span>
+           </div>
            ${s.adminFlagged ? '<div style="font-size:10px;color:var(--amber);margin-top:4px">Flagged for Review</div>' : actions}
         </div>
       </div>
@@ -1142,23 +1332,30 @@ renderShipmentLists = function() {
     // Update Shipper Metrics
     let active = shipments.length;
     let transit = shipments.filter(s => s.status === 'in_transit').length;
-    let escrowTotal = shipments.reduce((sum, s) => sum + (s.status !== 'delivered' && s.status !== 'disputed' ? s.escrow : 0), 0);
+    let escrowTotal = shipments.reduce((sum, s) => sum + (s.status !== 'delivered' && s.status !== 'disputed' && s.status !== 'resolved' && s.status !== 'refunded' ? s.escrow : 0), 0);
     
     let el1 = document.getElementById('shipper-metric-active');
     if(el1) el1.textContent = active;
     let el2 = document.getElementById('shipper-metric-transit');
     if(el2) el2.textContent = transit;
     let el3 = document.getElementById('shipper-metric-escrow');
-    if(el3) el3.textContent = escrowTotal + ' ETH';
+    if(el3) el3.textContent = '₹' + escrowTotal.toLocaleString('en-IN');
   }
 
   if (currentUser.role === 'RECEIVER') {
     // Populate Incoming Shipments
-    let statusPill = { pending:'<span class="pill p-pd">Pending</span>', in_transit:'<span class="pill p-tr">In Transit</span>', delivered:'<span class="pill p-dl">Delivered</span>', disputed:'<span class="pill p-ar">Disputed</span>' };
+    let statusPill = {
+      pending: '<span class="pill p-pd">Pending</span>',
+      in_transit: '<span class="pill p-tr">In Transit</span>',
+      delivered: '<span class="pill p-dl">Delivered</span>',
+      disputed: '<span class="pill p-ar">Disputed</span>',
+      resolved: '<span class="pill p-rs">Resolved</span>',
+      refunded: '<span class="pill p-rf">Refunded</span>'
+    };
     let rcvHtml = shipments.map(s => {
        let isActive = s.id === activeShipmentId ? 'border: 1px solid var(--accent);' : '';
-       return `<div class="srow" style="cursor:pointer;${isActive}" onclick="selectShipment('${s.id}')">
-         <div><div class="sid">${s.id}</div><div class="sroute">From ${s.origin} · ${s.item}</div></div>
+       return `<div class="srow shipment-row-click" style="cursor:pointer;${isActive}" data-shipment-id="${escapeHtml(s.id)}">
+         <div><div class="sid">${escapeHtml(s.id)}</div><div class="sroute">From ${escapeHtml(s.origin)} · ${escapeHtml(s.item)}</div></div>
          ${statusPill[s.status]||''}
        </div>`;
     }).join('');
@@ -1169,7 +1366,8 @@ renderShipmentLists = function() {
     let pendingAmt = 0;
     let rcvEscrowHtml = shipments.map(s => {
       let actions = '';
-      let bcolor = s.status === 'disputed' ? 'b-danger' : (s.status === 'delivered' ? 'b-ok' : 'b-info');
+      let bcolor = s.status === 'disputed' ? 'b-danger' : (s.status === 'delivered' || s.status === 'resolved' ? 'b-ok' : (s.status === 'refunded' ? 'b-warn' : 'b-info'));
+      let onChainBadge = getOnChainBadge(s.onChainStatus);
       // They can approve/dispute if in transit or delivered (but not already released/disputed)
       if (s.status === 'in_transit' || s.status === 'pending') {
           pendingAmt += s.escrow;
@@ -1178,26 +1376,34 @@ renderShipmentLists = function() {
       if (s.status === 'pending') {
           actions = '<div style="font-size:10px;color:var(--text3);margin-top:6px">Waiting for pickup...</div>';
       } else if (s.status === 'in_transit') {
-          if (window.globalTruckArrivals && window.globalTruckArrivals[s.id]) {
+          if (s.arrivedAt) {
             actions = `
             <div style="display:flex;gap:8px;margin-top:6px">
-              <button class="action-btn btn-approve" onclick="approveEscrow(this,'${s.id}')">Approve Release</button>
-              <button class="action-btn btn-dispute" onclick="disputeEscrow(this,'${s.id}')">Dispute</button>
+              <button class="action-btn btn-approve approve-escrow-btn" data-shipment-id="${escapeHtml(s.id)}">Approve Release</button>
+              <button class="action-btn btn-dispute dispute-escrow-btn" data-shipment-id="${escapeHtml(s.id)}">Dispute</button>
             </div>
             `;
           } else {
-            actions = '<div style="font-size:10px;color:var(--text3);margin-top:6px">Shipment in transit...</div>';
+            actions = `
+            <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+              <span style="font-size:10px;color:var(--text3)">In transit (awaiting geofence arrival)</span>
+              <button class="action-btn btn-dispute dispute-escrow-btn" style="padding:2px 8px;font-size:10px" data-shipment-id="${escapeHtml(s.id)}">Dispute</button>
+            </div>
+            `;
           }
       } else {
           actions = `<span class="mbadge ${bcolor}" style="margin-top:4px">${s.status.toUpperCase()}</span>`;
       }
       return `
-      <div class="erow" id="escrow-${s.id}">
+      <div class="erow" id="escrow-${escapeHtml(s.id)}">
         <div>
-          <div style="font-family:var(--display);font-weight:700;font-size:13px">${s.id} — ₹${s.escrow}</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">${s.origin} → ${s.dest} · ${s.item}</div>
+          <div style="font-family:var(--display);font-weight:700;font-size:13px">${escapeHtml(s.id)} — ₹${s.escrow}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${escapeHtml(s.origin)} → ${escapeHtml(s.dest)} · ${escapeHtml(s.item)}</div>
         </div>
-        ${actions}
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          ${onChainBadge}
+          ${actions}
+        </div>
       </div>
       `;
     }).join('');
@@ -1206,7 +1412,7 @@ renderShipmentLists = function() {
     
     // Update metric
     let rcvMetric = document.getElementById('receiver-pending-amt');
-    if (rcvMetric) rcvMetric.textContent = pendingAmt + ' ETH';
+    if (rcvMetric) rcvMetric.textContent = '₹' + pendingAmt.toLocaleString('en-IN');
   }
 
     // === DYNAMIC REALISTIC UI UPDATES ===
@@ -1214,15 +1420,15 @@ renderShipmentLists = function() {
     // Generate realistic Blockchain Logs from shipments
     let allLogs = [];
     shipments.forEach(s => {
-        allLogs.push({ time: s.id.replace('SHP-',''), type: 'Registered', msg: `Shipment registered — ${s.id}`, hash: '0x' + Math.random().toString(16).slice(2,10) + '... · Registry Contract', color: 'var(--text3)' });
+        allLogs.push({ time: s.id.replace('SHP-',''), type: 'Registered', msg: `Shipment registered — ${escapeHtml(s.id)}`, hash: '0x' + Math.random().toString(16).slice(2,10) + '... · Registry Contract', color: 'var(--text3)' });
         if (s.status !== 'pending') {
-            allLogs.push({ time: s.id.replace('SHP-','') + '1', type: 'Sensor', msg: `Sensor payload verified — ${s.id}`, hash: '0x' + Math.random().toString(16).slice(2,10) + '... · Oracle Node', color: 'var(--accent)' });
+            allLogs.push({ time: s.id.replace('SHP-','') + '1', type: 'Sensor', msg: `Sensor payload verified — ${escapeHtml(s.id)}`, hash: '0x' + Math.random().toString(16).slice(2,10) + '... · Oracle Node', color: 'var(--accent)' });
         }
         if (s.status === 'delivered') {
-            allLogs.push({ time: s.id.replace('SHP-','') + '2', type: 'Release', msg: `Escrow released — ${s.id}`, hash: '0x' + (s.onChainTxHash || Math.random().toString(16).slice(2,10)) + '... · Smart Contract', color: 'var(--green)' });
+            allLogs.push({ time: s.id.replace('SHP-','') + '2', type: 'Release', msg: `Escrow released — ${escapeHtml(s.id)}`, hash: '0x' + (s.onChainTxHash || Math.random().toString(16).slice(2,10)) + '... · Smart Contract', color: 'var(--green)' });
         }
         if (s.status === 'disputed' || s.adminFlagged) {
-            allLogs.push({ time: s.id.replace('SHP-','') + '3', type: 'Dispute', msg: `Dispute flagged — ${s.id}`, hash: '0x' + (s.onChainTxHash || Math.random().toString(16).slice(2,10)) + '... · Smart Contract', color: 'var(--red)' });
+            allLogs.push({ time: s.id.replace('SHP-','') + '3', type: 'Dispute', msg: `Dispute flagged — ${escapeHtml(s.id)}`, hash: '0x' + (s.onChainTxHash || Math.random().toString(16).slice(2,10)) + '... · Smart Contract', color: 'var(--red)' });
         }
     });
     // Sort logs descending
@@ -1264,12 +1470,12 @@ renderShipmentLists = function() {
         let temps = shipments.map(s => s.latestReading ? s.latestReading.temperature : 0).filter(t => t > 0);
         let avgTemp = temps.length ? (temps.reduce((a,b)=>a+b,0)/temps.length).toFixed(1) + '°C' : '--';
         let atRisk = shipments.filter(s => s.status === 'disputed' || s.adminFlagged).length;
-        let escrowTotal = shipments.reduce((sum, s) => sum + (s.status !== 'delivered' && s.status !== 'disputed' ? s.escrow : 0), 0);
-        let contractCount = shipments.filter(s => s.status !== 'delivered' && s.status !== 'disputed').length;
+        let escrowTotal = shipments.reduce((sum, s) => sum + (s.status !== 'delivered' && s.status !== 'disputed' && s.status !== 'resolved' && s.status !== 'refunded' ? s.escrow : 0), 0);
+        let contractCount = shipments.filter(s => s.status !== 'delivered' && s.status !== 'disputed' && s.status !== 'resolved' && s.status !== 'refunded').length;
         
         let elTemp = document.getElementById('admin-metric-temp'); if(elTemp) elTemp.textContent = avgTemp;
         let elRisk = document.getElementById('admin-metric-risk'); if(elRisk) elRisk.textContent = atRisk;
-        let elEscrow = document.getElementById('admin-metric-escrow'); if(elEscrow) elEscrow.textContent = escrowTotal + ' ETH';
+        let elEscrow = document.getElementById('admin-metric-escrow'); if(elEscrow) elEscrow.textContent = '₹' + escrowTotal.toLocaleString('en-IN');
         let elContracts = document.getElementById('admin-metric-contracts'); if(elContracts) elContracts.textContent = contractCount + ' contracts';
 
         // Admin AI Spoilage
@@ -1280,8 +1486,8 @@ renderShipmentLists = function() {
             return `
               <div class="sp-item">
                 <div>
-                  <div style="font-family:var(--display);font-weight:700;font-size:13px;color:var(--text)">${s.id}</div>
-                  <div style="font-size:11px;color:var(--text3);margin-top:2px">${s.item} · ${t}°C</div>
+                  <div style="font-family:var(--display);font-weight:700;font-size:13px;color:var(--text)">${escapeHtml(s.id)}</div>
+                  <div style="font-size:11px;color:var(--text3);margin-top:2px">${escapeHtml(s.item)} · ${t}°C</div>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px">
                   <div class="rb-wrap"><div class="rb-fill" style="width:${risk}%;background:${color}"></div></div>
@@ -1305,17 +1511,28 @@ renderShipmentLists = function() {
 
 
 async function flagDelay(id) {
-  if(confirm("Report delay to Admin?")) {
+  var confirmed = window.LogiTrustUI ? await LogiTrustUI.confirm("Report transit delay to Admin for priority review?", "Flag Shipment Delay") : confirm("Report delay to Admin?");
+  if(confirmed) {
     await LogiTrustAPI.flagDelay(id);
-    alert("Flagged successfully.");
+    if (window.LogiTrustUI) LogiTrustUI.toast("Delay flagged successfully for review.", "warn");
+    else alert("Flagged successfully.");
     loadShipments();
   }
 }
 
 async function adminResolve(id, action) {
-  if(confirm("Confirm admin action: " + action + "?")) {
-    await LogiTrustAPI.adminResolve(id, action);
-    alert("Resolved successfully.");
+  var actionLabel = action === 'RELEASE_FUNDS' ? 'Force Release (pay carrier)' : (action === 'REFUND_RECEIVER' ? 'Force Refund (return escrow)' : action);
+  var confirmed = window.LogiTrustUI ? await LogiTrustUI.confirm("Confirm admin action: " + actionLabel + "?", "Admin Escrow Arbitration") : confirm("Confirm admin action: " + action + "?");
+  if(confirmed) {
+    const res = await LogiTrustAPI.adminResolve(id, action);
+    if (res && res.error) {
+      if (window.LogiTrustUI) LogiTrustUI.toast("Failed to resolve: " + res.error, "error");
+      else alert("Failed to resolve: " + res.error);
+    } else {
+      var okMsg = "Arbitration resolved (" + (res && res.status ? res.status : action) + ").";
+      if (window.LogiTrustUI) LogiTrustUI.toast(okMsg, "success");
+      else alert(okMsg);
+    }
     loadShipments();
   }
 }

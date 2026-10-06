@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 contract SmartEscrow {
-    enum EscrowState { Locked, Released, Disputed }
+    enum EscrowState { Locked, Released, Disputed, Refunded }
 
     struct Escrow {
         address shipper;
@@ -21,6 +21,7 @@ contract SmartEscrow {
     event EscrowLocked(bytes32 indexed shipmentId, uint256 amount);
     event EscrowReleased(bytes32 indexed shipmentId, uint256 amount);
     event EscrowDisputed(bytes32 indexed shipmentId);
+    event EscrowRefunded(bytes32 indexed shipmentId, uint256 amount);
 
     modifier onlyAdmin() {
         require(msg.sender == admin, "Not admin");
@@ -41,7 +42,11 @@ contract SmartEscrow {
     }
 
     function lockEscrow(bytes32 shipmentId, address shipper, address receiver) external payable {
+        require(shipper != address(0), "Invalid shipper address");
+        require(receiver != address(0), "Invalid receiver address");
+        require(msg.value > 0, "Escrow amount must be greater than zero");
         require(escrows[shipmentId].amount == 0, "Escrow already exists");
+
         escrows[shipmentId] = Escrow({
             shipper: shipper,
             receiver: receiver,
@@ -55,16 +60,19 @@ contract SmartEscrow {
     }
 
     function markGeoFence(bytes32 shipmentId) external onlyOracle {
+        require(escrows[shipmentId].amount > 0, "Escrow does not exist");
         escrows[shipmentId].geoFenceVerified = true;
         _tryAutoRelease(shipmentId);
     }
 
     function markPayloadVerified(bytes32 shipmentId) external onlyOracle {
+        require(escrows[shipmentId].amount > 0, "Escrow does not exist");
         escrows[shipmentId].payloadVerified = true;
         _tryAutoRelease(shipmentId);
     }
 
     function flagTemperatureBreach(bytes32 shipmentId) external onlyOracle {
+        require(escrows[shipmentId].amount > 0, "Escrow does not exist");
         escrows[shipmentId].temperatureOk = false;
     }
 
@@ -77,6 +85,7 @@ contract SmartEscrow {
 
     function releaseEscrow(bytes32 shipmentId) external {
         Escrow storage e = escrows[shipmentId];
+        require(e.amount > 0, "Escrow does not exist");
         require(msg.sender == e.receiver || msg.sender == admin, "Not authorized");
         require(e.state == EscrowState.Locked, "Not locked");
         _release(shipmentId);
@@ -92,7 +101,9 @@ contract SmartEscrow {
 
     function disputeEscrow(bytes32 shipmentId) external {
         Escrow storage e = escrows[shipmentId];
+        require(e.amount > 0, "Escrow does not exist");
         require(msg.sender == e.receiver || msg.sender == admin, "Not authorized");
+        require(e.state == EscrowState.Locked, "Escrow not locked");
         e.state = EscrowState.Disputed;
         emit EscrowDisputed(shipmentId);
     }
@@ -100,13 +111,15 @@ contract SmartEscrow {
     // Admin resolves a dispute manually — simplified arbitration for Phase 1/2.
     function resolveDispute(bytes32 shipmentId, bool releaseToShipper) external onlyAdmin {
         Escrow storage e = escrows[shipmentId];
+        require(e.amount > 0, "Escrow does not exist");
         require(e.state == EscrowState.Disputed, "Not disputed");
         if (releaseToShipper) {
             _release(shipmentId);
         } else {
-            e.state = EscrowState.Released;
+            e.state = EscrowState.Refunded;
             (bool sent, ) = e.receiver.call{value: e.amount}("");
             require(sent, "Refund failed");
+            emit EscrowRefunded(shipmentId, e.amount);
         }
     }
 }

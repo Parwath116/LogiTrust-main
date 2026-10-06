@@ -1,32 +1,59 @@
 import { Router } from "express";
 import passport from "passport";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import { PrismaClient } from "@prisma/client";
+import { signOAuthState } from "../utils/oauthState.js";
 
 const prisma = new PrismaClient();
 const router = Router();
 
-// Step 1: kick off Google OAuth
+// Step 1: kick off Google OAuth with signed state and validated role
 router.get("/google", (req, res, next) => {
-  const role = req.query.role || "SHIPPER";
-  const state = Buffer.from(JSON.stringify({ role })).toString('base64');
+  const role = (req.query.role || "SHIPPER").toString().toUpperCase();
+  const validRoles = ["SHIPPER", "RECEIVER"];
+  if (!validRoles.includes(role)) {
+    return res.status(400).json({ error: "Invalid role. Role must be SHIPPER or RECEIVER" });
+  }
+
+  const state = signOAuthState({ role, nonce: crypto.randomBytes(16).toString("hex") });
   passport.authenticate("google", { scope: ["profile", "email"], state })(req, res, next);
 });
 
 // Step 2: Google redirects here after consent
-router.get(
-  "/google/callback",
-  passport.authenticate("google", { session: true, failureRedirect: "/login-failed" }),
-  (req, res) => {
-    const token = jwt.sign(
-      { userId: req.user.id, role: req.user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-    // Hand the JWT back to the frontend via a redirect with the token in the URL fragment
-    res.redirect(`${process.env.CLIENT_URL}/auth-success.html#token=${token}`);
-  }
-);
+router.get("/google/callback", (req, res, next) => {
+  passport.authenticate("google", { session: true }, (err, user, info) => {
+    if (err) {
+      console.warn("[Auth] Google OAuth callback error:", err.message);
+      return res.redirect(`${process.env.CLIENT_URL || "http://localhost:3000"}/auth-success.html#error=${encodeURIComponent(err.message)}`);
+    }
+    if (!user) {
+      const msg = info && info.message ? info.message : "Authentication failed";
+      return res.redirect(`${process.env.CLIENT_URL || "http://localhost:3000"}/auth-success.html#error=${encodeURIComponent(msg)}`);
+    }
+
+    req.logIn(user, (loginErr) => {
+      if (loginErr) {
+        console.warn("[Auth] Session login error:", loginErr.message);
+        return res.redirect(`${process.env.CLIENT_URL || "http://localhost:3000"}/auth-success.html#error=${encodeURIComponent(loginErr.message)}`);
+      }
+      const token = jwt.sign(
+        { userId: user.id, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: "8h" }
+      );
+
+      // Destroy transient session to ensure stateless JWT usage
+      if (req.session) {
+        req.session.destroy(() => {
+          res.redirect(`${process.env.CLIENT_URL || "http://localhost:3000"}/auth-success.html#token=${token}`);
+        });
+      } else {
+        res.redirect(`${process.env.CLIENT_URL || "http://localhost:3000"}/auth-success.html#token=${token}`);
+      }
+    });
+  })(req, res, next);
+});
 
 // Frontend calls this with the JWT to get the current user + role
 router.get("/me", async (req, res) => {
@@ -60,16 +87,41 @@ router.get("/notifications", async (req, res) => {
   }
 });
 
-// Admin-only: promote a user to a role (admin/shipper/receiver)
+// Admin-only: promote a user to a role (ADMIN/SHIPPER/RECEIVER)
 router.post("/set-role", async (req, res) => {
-  const bootstrapSecret = req.headers["x-bootstrap-secret"] || req.query.secret;
-  if (!process.env.BOOTSTRAP_SECRET || bootstrapSecret !== process.env.BOOTSTRAP_SECRET) {
-    return res.status(403).json({ error: "Invalid bootstrap secret" });
+  const bootstrapSecret = req.headers["x-bootstrap-secret"];
+  let isAuthorized = false;
+
+  if (process.env.BOOTSTRAP_SECRET && bootstrapSecret && bootstrapSecret === process.env.BOOTSTRAP_SECRET) {
+    isAuthorized = true;
+  } else {
+    // Check if caller is authenticated ADMIN
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+      try {
+        const token = authHeader.replace("Bearer ", "");
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (decoded.role === "ADMIN") isAuthorized = true;
+      } catch {}
+    }
+  }
+
+  if (!isAuthorized) {
+    return res.status(403).json({ error: "Unauthorized: Invalid bootstrap secret or non-admin" });
   }
 
   const { userId, role } = req.body;
-  const user = await prisma.user.update({ where: { id: userId }, data: { role } });
-  res.json(user);
+  const validRoles = ["ADMIN", "SHIPPER", "RECEIVER"];
+  if (!role || !validRoles.includes(role)) {
+    return res.status(400).json({ error: "Invalid role. Role must be ADMIN, SHIPPER, or RECEIVER" });
+  }
+
+  try {
+    const user = await prisma.user.update({ where: { id: userId }, data: { role } });
+    res.json(user);
+  } catch (err) {
+    res.status(404).json({ error: "User not found or role update failed" });
+  }
 });
 
 router.get("/logout", (req, res) => {

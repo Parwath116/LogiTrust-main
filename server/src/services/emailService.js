@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { PrismaClient } from "@prisma/client";
+import { inrToEth } from "./blockchain.js";
 
 const prisma = new PrismaClient();
 
@@ -33,6 +34,8 @@ export async function sendDisputeEmail(shipment, reason = "Manual Dispute") {
       return;
     }
 
+    const ethValue = inrToEth(shipment.escrowValue);
+
     const mailOptions = {
       from: `"LogiTrust Oracle" <${process.env.EMAIL_USER}>`,
       to: recipients.join(", "),
@@ -44,10 +47,10 @@ Be advised that the smart contract escrow for shipment ${shipment.shipmentCode} 
 Reason for Revocation: ${reason}
 
 Actions Taken:
-- The locked escrow amount of ₹${shipment.escrowValue} is being refunded to the Receiver.
+- The locked escrow amount of ₹${shipment.escrowValue} (~${ethValue} ETH) is being refunded to the Receiver.
 - The shipment status is now permanently marked as DISPUTED on the blockchain.
 
-Please check your Metamask wallet (Sepolia Network) to confirm the refund transaction.
+Please check your Ethereum wallet (Sepolia Network) to confirm the refund transaction.
 
 Regards,
 LogiTrust System`,
@@ -80,6 +83,8 @@ export async function sendDeliveryEmail(shipment) {
       return;
     }
 
+    const ethValue = inrToEth(shipment.escrowValue);
+
     const mailOptions = {
       from: `"LogiTrust Oracle" <${process.env.EMAIL_USER}>`,
       to: recipients.join(", "),
@@ -89,10 +94,10 @@ export async function sendDeliveryEmail(shipment) {
 We are pleased to inform you that the shipment ${shipment.shipmentCode} has been successfully DELIVERED and the escrow funds have been RELEASED.
 
 Actions Taken:
-- The locked escrow amount of ₹${shipment.escrowValue} has been released and transferred to the Shipper.
+- The locked escrow amount of ₹${shipment.escrowValue} (~${ethValue} ETH) has been released and transferred to the Shipper.
 - The shipment status is now permanently marked as DELIVERED on the blockchain.
 
-Please check your Metamask wallet (Sepolia Network) to confirm the transaction.
+Please check your Ethereum wallet (Sepolia Network) to confirm the transaction.
 
 Thank you for using LogiTrust!
 

@@ -2,6 +2,7 @@ import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { registerShipmentOnChain } from "../services/blockchain.js";
+import { resolveCityCoordinates } from "../utils/geo.js";
 import { z } from "zod";
 
 const prisma = new PrismaClient();
@@ -16,6 +17,8 @@ const createShipmentSchema = z.object({
   escrowValue: z.number().gt(0, "Escrow value must be strictly greater than 0"),
   receiverEmail: z.string().email().optional().or(z.literal("")),
   assignedSensorId: z.string().optional().or(z.literal("")),
+  destLat: z.number().optional().nullable(),
+  destLon: z.number().optional().nullable(),
 });
 
 // List shipments — Admin sees all, Shipper sees own, Receiver sees own
@@ -43,6 +46,16 @@ router.post("/", requireAuth, requireRole("SHIPPER", "ADMIN"), async (req, res) 
       ? await prisma.user.findUnique({ where: { email: receiverEmail } })
       : null;
 
+    const destCoords = await resolveCityCoordinates(destination, validated.destLat, validated.destLon);
+    if (!destCoords && (validated.destLat == null || validated.destLon == null)) {
+      return res.status(400).json({
+        error: `Could not resolve destination coordinates for "${destination}". Please specify custom destLat and destLon.`
+      });
+    }
+
+    const finalDestLat = destCoords?.lat ?? validated.destLat;
+    const finalDestLon = destCoords?.lon ?? validated.destLon;
+
     let shipment;
     let attempts = 0;
     while (attempts < 3) {
@@ -54,6 +67,8 @@ router.post("/", requireAuth, requireRole("SHIPPER", "ADMIN"), async (req, res) 
             item,
             origin,
             destination,
+            destLat: finalDestLat,
+            destLon: finalDestLon,
             maxTemp,
             maxHumidity,
             escrowValue,
@@ -74,13 +89,27 @@ router.post("/", requireAuth, requireRole("SHIPPER", "ADMIN"), async (req, res) 
       }
     }
 
-    // Write the shipment onto the Sepolia registry contract (no-op if contract not configured yet)
-    try {
-      const txHash = await registerShipmentOnChain(shipment);
-      await prisma.shipment.update({ where: { id: shipment.id }, data: { onChainTxHash: txHash } });
-      shipment.onChainTxHash = txHash;
-    } catch (err) {
-      console.warn("On-chain registration skipped:", err.message);
+    // Write the shipment onto the Sepolia registry contract
+    if (!process.env.SHIPMENT_REGISTRY_ADDRESS || !process.env.DEPLOYER_PRIVATE_KEY) {
+      console.info(`[Blockchain] Contracts not configured; shipment ${shipment.shipmentCode} marked NOT_REGISTERED`);
+      shipment.onChainStatus = "NOT_REGISTERED";
+    } else {
+      try {
+        const txHash = await registerShipmentOnChain(shipment);
+        await prisma.shipment.update({
+          where: { id: shipment.id },
+          data: { onChainTxHash: txHash, onChainStatus: "REGISTERED" },
+        });
+        shipment.onChainTxHash = txHash;
+        shipment.onChainStatus = "REGISTERED";
+      } catch (err) {
+        console.error(`[Blockchain] On-chain registration failed for ${shipment.shipmentCode}:`, err.message);
+        await prisma.shipment.update({
+          where: { id: shipment.id },
+          data: { onChainStatus: "FAILED" },
+        });
+        shipment.onChainStatus = "FAILED";
+      }
     }
 
     res.status(201).json(shipment);
@@ -114,64 +143,83 @@ router.post("/:id/flag-delay", requireAuth, requireRole("SHIPPER"), async (req, 
 router.post("/:id/admin-resolve", requireAuth, requireRole("ADMIN"), async (req, res) => {
   try {
     const { action } = req.body; // "REFUND_RECEIVER" or "RELEASE_FUNDS"
+    if (action !== "REFUND_RECEIVER" && action !== "RELEASE_FUNDS") {
+      return res.status(400).json({ error: "Invalid action. Must be REFUND_RECEIVER or RELEASE_FUNDS" });
+    }
+
     const shipment = await prisma.shipment.findUnique({ where: { id: req.params.id } });
     if (!shipment) return res.status(404).json({ error: "Shipment not found" });
-    if (shipment.status === "DELIVERED" || shipment.status === "DISPUTED") return res.status(400).json({ error: "Shipment is already resolved" });
+
+    // Reject already resolved shipments
+    if (shipment.status === "DELIVERED" || shipment.status === "RESOLVED" || shipment.status === "REFUNDED") {
+      return res.status(400).json({ error: "Shipment is already resolved" });
+    }
+
+    // Must be DISPUTED or adminFlagged to be resolved by admin
+    if (shipment.status !== "DISPUTED" && !shipment.adminFlagged) {
+      return res.status(400).json({ error: "Shipment must be disputed or flagged for review to be resolved" });
+    }
+
+    const releaseToShipper = action === "RELEASE_FUNDS";
+    let txHash = null;
+
+    // Call on-chain resolution if blockchain contracts are configured
+    if (process.env.SMART_ESCROW_ADDRESS && process.env.DEPLOYER_PRIVATE_KEY) {
+      try {
+        const { resolveDisputeOnChain } = await import("../services/blockchain.js");
+        txHash = await resolveDisputeOnChain(shipment.shipmentCode, releaseToShipper);
+      } catch (err) {
+        console.error(`[Blockchain] On-chain dispute resolution failed for ${shipment.shipmentCode}:`, err.message);
+        // Do NOT update DB status if on-chain call fails
+        return res.status(500).json({ error: `On-chain dispute resolution failed: ${err.message}` });
+      }
+    }
+
+    const newStatus = action === "REFUND_RECEIVER" ? "REFUNDED" : "RESOLVED";
+
+    if (process.env.SHIPMENT_REGISTRY_ADDRESS && process.env.DEPLOYER_PRIVATE_KEY) {
+      try {
+        const { updateShipmentStatusOnChain } = await import("../services/blockchain.js");
+        await updateShipmentStatusOnChain(shipment.shipmentCode, newStatus);
+      } catch (err) {
+        console.warn(`[Blockchain] Failed to update registry status on-chain for ${shipment.shipmentCode}:`, err.message);
+      }
+    }
+
+    await prisma.shipment.update({
+      where: { id: req.params.id },
+      data: {
+        status: newStatus,
+        adminFlagged: false,
+        ...(txHash ? { onChainTxHash: txHash } : {}),
+      },
+    });
 
     if (action === "REFUND_RECEIVER") {
-      // Call blockhain dispute
-      const { disputeEscrowOnChain } = await import("../services/blockchain.js");
-      try {
-        await disputeEscrowOnChain(shipment.shipmentCode);
-      } catch (err) {
-         console.warn("On-chain dispute failed:", err.message);
-      }
-      await prisma.shipment.update({
-        where: { id: req.params.id },
-        data: { status: "DISPUTED", adminFlagged: false }
-      });
       // Notify receiver via DB and email
-      if (shipment.receiverId || shipment.receiverEmail) {
-        if (shipment.receiverId) {
-          await prisma.notification.create({
-            data: {
-              userId: shipment.receiverId,
-              message: `Admin has manually revoked contract for ${shipment.shipmentCode}. Refund issued.`,
-            }
-          });
-        }
-        
-        // Trigger dispute notification
-        const { sendDisputeEmail } = await import("../services/emailService.js");
-        sendDisputeEmail(shipment, "Admin manually refunded the shipment.");
+      if (shipment.receiverId) {
+        await prisma.notification.create({
+          data: {
+            userId: shipment.receiverId,
+            message: `Admin has manually revoked contract for ${shipment.shipmentCode}. Refund issued.`,
+          },
+        });
       }
-    } else if (action === "RELEASE_FUNDS") {
-      // Call blockchain release
-      const { releaseEscrowOnChain } = await import("../services/blockchain.js");
-      try {
-        await releaseEscrowOnChain(shipment.shipmentCode);
-      } catch (err) {
-         console.warn("On-chain release failed:", err.message);
-      }
-      await prisma.shipment.update({
-        where: { id: req.params.id },
-        data: { status: "DELIVERED", adminFlagged: false }
-      });
-      // Notify shipper
+      const { sendDisputeEmail } = await import("../services/emailService.js");
+      sendDisputeEmail(shipment, "Admin manually refunded the shipment.");
+    } else {
+      // Notify shipper via DB and email
       await prisma.notification.create({
         data: {
           userId: shipment.shipperId,
           message: `Admin has manually released funds for ${shipment.shipmentCode}.`,
-        }
+        },
       });
-      
       const { sendDeliveryEmail } = await import("../services/emailService.js");
       sendDeliveryEmail(shipment);
-    } else {
-      return res.status(400).json({ error: "Invalid action" });
     }
 
-    res.json({ message: "Shipment resolved successfully." });
+    res.json({ message: "Shipment resolved successfully.", status: newStatus, txHash });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -18,6 +18,19 @@ enum ShipmentStatus {
   IN_TRANSIT
   DELIVERED
   DISPUTED
+  RESOLVED
+  REFUNDED
+}
+
+enum OnChainStatus {
+  NOT_REGISTERED
+  REGISTERED
+  FAILED
+}
+
+enum ReadingSource {
+  GPS
+  SIMULATED
 }
 
 model User {
@@ -45,6 +58,7 @@ model Shipment {
   maxHumidity   Float
   escrowValue   Float
   status        ShipmentStatus @default(PENDING)
+  onChainStatus OnChainStatus  @default(NOT_REGISTERED)
   onChainTxHash String?
   riskScore     Float?
   dispatchedAt  DateTime?
@@ -57,6 +71,9 @@ model Shipment {
   receiverEmail String?
   adminFlagged  Boolean @default(false)
   assignedSensorId String?
+  destLat       Float?
+  destLon       Float?
+  arrivedAt     DateTime?
 
   readings SensorReading[]
 }
@@ -82,6 +99,14 @@ model SensorReading {
   sensorId    String
   signature   String
   breached    Boolean  @default(false)
-  simulatedLocation Boolean @default(false)
+  source      ReadingSource @default(GPS)
   createdAt   DateTime @default(now())
+}
+
+model Sensor {
+  id        String   @id @default(uuid())
+  sensorId  String   @unique
+  secretKey String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
 }

@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>LogiTrust — Smart Supply Chain</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script>
+  (function(){
+    var t = localStorage.getItem('logitrust_theme');
+    if (!t) { t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'; }
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
 <style>
 
 :root{
@@ -237,11 +244,24 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 }
 
 </style>
+<link rel="stylesheet" href="ui.css"/>
 </head>
 <body>
 <!-- ══ SPLASH ══ -->
 
-<div id="page-splash" class="page active">
+<!-- ══ TOP NAVBAR ══ -->
+<header style="position:fixed;top:0;left:0;right:0;z-index:9000;display:flex;justify-content:space-between;align-items:center;padding:12px 24px;background:var(--bg2);border-bottom:1px solid var(--border)">
+  <div style="display:flex;align-items:center;gap:10px">
+    <span style="font-family:var(--display);font-weight:800;font-size:16px;color:var(--text)">Logi<span style="color:var(--accent)">Trust</span></span>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <button class="theme-btn theme-toggle-btn" type="button" aria-label="Toggle theme" title="Toggle Theme (T)">
+      <span class="theme-toggle-icon">🌙</span>
+    </button>
+  </div>
+</header>
+
+<div id="page-splash" class="page active" style="padding-top:60px">
   <div class="splash-grid"></div>
   <div class="splash-glow"></div>
   <div class="splash-corner"></div>
@@ -275,11 +295,9 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
   </div>
 </div>
 
-
-
 <!-- ══ ROLE SELECTOR ══ -->
 
-<div id="page-roles" class="page" style="align-items:center;justify-content:center">
+<div id="page-roles" class="page" style="align-items:center;justify-content:center;padding-top:70px">
   <div class="roles-inner">
     <button class="back-pill" style="margin-bottom:28px;align-self:flex-start" onclick="showPage('page-splash')">
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="7,2 3,6 7,10"/><line x1="3" y1="6" x2="10" y2="6"/></svg>
@@ -288,7 +306,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
     <div class="roles-wordmark">Logi<span>Trust</span></div>
     <div class="roles-sub">Select your role to access the dashboard</div>
     <div class="roles-grid">
-      <div class="role-card" onclick="login('ADMIN')">
+      <button type="button" class="role-card" onclick="login('ADMIN')" aria-label="Login as Administrator">
         <div class="role-icon-wrap">
           <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
             <rect x="4" y="4" width="8" height="8" rx="2" fill="#3B9EFF"/>
@@ -304,8 +322,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
         <div class="role-name">Admin</div>
         <div class="role-desc">Full platform visibility — all shipments, sensor feeds, escrow contracts, and blockchain logs.</div>
         <span class="role-badge rb-admin">Full Access</span>
-      </div>
-      <div class="role-card" onclick="login('SHIPPER')">
+      </button>
+      <button type="button" class="role-card" onclick="login('SHIPPER')" aria-label="Login as Shipper">
         <div class="role-icon-wrap">
           <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
             <rect x="3" y="10" width="18" height="12" rx="2" fill="none" stroke="#22d77a" stroke-width="1.5" opacity="0.7"/>
@@ -319,8 +337,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
         <div class="role-name">Shipper</div>
         <div class="role-desc">Register shipments, track outgoing goods, monitor sensor readings and escrow status.</div>
         <span class="role-badge rb-shipper">Outgoing Only</span>
-      </div>
-      <div class="role-card" onclick="login('RECEIVER')">
+      </button>
+      <button type="button" class="role-card" onclick="login('RECEIVER')" aria-label="Login as Receiver">
         <div class="role-icon-wrap">
           <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
             <rect x="6" y="12" width="16" height="12" rx="2" fill="none" stroke="#f5a623" stroke-width="1.5" opacity="0.7"/>
@@ -331,14 +349,57 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
         <div class="role-name">Receiver</div>
         <div class="role-desc">View incoming shipments, check compliance reports, and approve or dispute escrow releases.</div>
         <span class="role-badge rb-receiver">Incoming Only</span>
-      </div>
+      </button>
     </div>
+
+    <!-- ══ FAQ SECTION ══ -->
+    <section class="faq-section" aria-label="Frequently Asked Questions">
+      <h2 class="faq-title">Frequently Asked <span>Questions</span></h2>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary class="faq-summary">How does the smart contract escrow work?</summary>
+          <div class="faq-content">
+            When a Shipper creates a shipment, escrow funds (converted from ₹ INR to Sepolia ETH using the configured exchange rate) are programmatically locked in the <code>SmartEscrow</code> contract. Funds remain securely locked until the shipment reaches its destination and the Receiver approves the release, or until an Admin resolves a flagged dispute.
+          </div>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-summary">What happens when a temperature or humidity breach occurs?</summary>
+          <div class="faq-content">
+            The IoT sensor stream continuously compares ambient conditions with shipment thresholds. If sustained rule breaches occur (e.g. 3 consecutive breaches within 15 minutes), the backend oracle automatically transitions the shipment to disputed and locks the funds. In parallel, the AI service calculates spoilage risk and flags high-risk shipments for Admin review.
+          </div>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-summary">Who has the authority to resolve disputes?</summary>
+          <div class="faq-content">
+            Only platform administrators (configured via <code>ADMIN_EMAIL</code>) can access the Admin Console to arbitrate disputed or flagged shipments. The Admin can execute a <b>Force Release</b> to pay the Shipper or a <b>Force Refund</b> to return the escrow to the Receiver.
+          </div>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-summary">Is the GPS tracking live hardware or simulated?</summary>
+          <div class="faq-content">
+            LogiTrust supports both! When an Arduino Uno R4 with a TinyGPSPlus module is connected, live satellite fixes are reported (requiring satellites &ge; 4, HDOP &lt; 5). For software demos, a built-in CLI route simulator generates realistic telemetry labeled with a "Simulated location" badge. In all cases, destination arrival is strictly verified server-side via geofencing (within 500m).
+          </div>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-summary">Why does LogiTrust use a custodial backend relayer instead of MetaMask?</summary>
+          <div class="faq-content">
+            To provide seamless UX for supply chain operators without requiring browser wallet extensions, seed phrase handling, or direct gas management. The backend oracle wallet submits all on-chain transactions on Sepolia, generating public transaction hashes that can be independently verified on Etherscan.
+          </div>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-summary">How does the AI spoilage prediction model work?</summary>
+          <div class="faq-content">
+            A FastAPI microservice runs a Gradient Boosting Pipeline trained on cold-chain degradation patterns across cargo categories (pharma, dairy, produce, electronics, general). It evaluates live temperature differences, spike history, humidity, and transit duration to produce a 0–100% risk score. If risk exceeds 80%, the shipment is flagged for Admin investigation.
+          </div>
+        </details>
+      </div>
+    </section>
+
   </div>
 </div>
 
-
-
 <script src="config.js"></script>
+<script src="ui.js"></script>
 <script>
   function showPage(id) {
     document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});

@@ -4,14 +4,25 @@
 <body style="background:#06090f;color:#8ba8cc;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh">
   <p>Signing you in…</p>
   <script>
-    // Google OAuth redirect lands here with #token=<jwt>
+    // Google OAuth redirect lands here with #token=<jwt> or #error=<msg>
     const hash = window.location.hash;
-    const token = hash.startsWith("#token=") ? hash.replace("#token=", "") : null;
+    const urlParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(hash.replace(/^#/, "?"));
+    const token = hashParams.get("token") || (hash.startsWith("#token=") ? hash.replace("#token=", "") : null);
+    const error = hashParams.get("error") || urlParams.get("error");
+
     if (token) {
       localStorage.setItem("logitrust_jwt", token);
       window.location.href = "dashboard.html";
     } else {
-      document.body.innerText = "Sign-in failed. Please try again.";
+      document.body.innerHTML = `
+        <div style="text-align:center;max-width:440px;padding:32px 24px;border:1px solid #1a2736;background:#0d1520;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.5)">
+          <div style="font-size:32px;margin-bottom:12px">⚠️</div>
+          <h2 style="color:#ff5252;margin:0 0 10px;font-size:18px">Sign-in Failed</h2>
+          <p style="color:#8ba8cc;font-size:13px;line-height:1.6;margin:0 0 20px">${error ? decodeURIComponent(error) : "Authentication could not be completed. Please try again."}</p>
+          <a href="index.html" style="display:inline-block;padding:10px 20px;background:#3b9eff;color:#fff;text-decoration:none;border-radius:6px;font-size:13px;font-weight:600">Back to Login</a>
+        </div>
+      `;
     }
   </script>
 </body>

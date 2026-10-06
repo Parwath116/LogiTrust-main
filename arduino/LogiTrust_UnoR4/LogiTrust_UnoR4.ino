@@ -13,9 +13,12 @@ const char* DEVICE_SECRET = "logitrust_hardware_key_2026";
 const char* ssid = "Your_SSID";
 const char* password = "Your_PWD";
 
-// HiveMQ Public Cloud Broker
-const char* mqtt_server = "broker.hivemq.com"; 
+// MQTT Broker Configuration
+// For local demo with Docker Mosquitto: set to your PC's LAN IP address (e.g., 192.168.1.100)
+// For public cloud broker testing: set mqtt_server = "broker.hivemq.com"
+const char* mqtt_server = "192.168.1.100"; // Replace with your PC LAN IP running Docker Mosquitto
 const int mqtt_port = 1883;
+const char* mqtt_topic = "logitrust/telemetry/uno-r4";
 
 // DHT Sensor Configuration
 #define DHTPIN 2
@@ -94,6 +97,46 @@ void setup() {
   client.setBufferSize(512);
 }
 
+// Helper: Compute HMAC-SHA256 using standard SHA256 primitive
+String computeHMAC(const char* key, const String& message) {
+  uint8_t k[64];
+  memset(k, 0, 64);
+  size_t keyLen = strlen(key);
+  if (keyLen > 64) {
+    SHA256 kh;
+    kh.update(key, keyLen);
+    kh.finalize(k, 32);
+  } else {
+    memcpy(k, key, keyLen);
+  }
+
+  uint8_t k_ipad[64];
+  uint8_t k_opad[64];
+  for (int i = 0; i < 64; i++) {
+    k_ipad[i] = k[i] ^ 0x36;
+    k_opad[i] = k[i] ^ 0x5c;
+  }
+
+  SHA256 inner;
+  inner.update(k_ipad, 64);
+  inner.update(message.c_str(), message.length());
+  uint8_t innerHash[32];
+  inner.finalize(innerHash, 32);
+
+  SHA256 outer;
+  outer.update(k_opad, 64);
+  outer.update(innerHash, 32);
+  uint8_t mac[32];
+  outer.finalize(mac, 32);
+
+  String sig = "0x";
+  for (int i = 0; i < 32; i++) {
+    if (mac[i] < 16) sig += "0";
+    sig += String(mac[i], HEX);
+  }
+  return sig;
+}
+
 void loop() {
   if (!client.connected()) {
     reconnect();
@@ -113,11 +156,10 @@ void loop() {
     float temp = dht.readTemperature();
     float hum = dht.readHumidity();
     
-    // Check if readings failed, set to 0.0 or a default if error occurs
+    // Skip publish on DHT read failure to avoid sending corrupt data
     if (isnan(temp) || isnan(hum)) {
-      Serial.println("Failed to read from DHT sensor!");
-      temp = 0.0;
-      hum = 0.0;
+      Serial.println("Error: Failed to read from DHT sensor! Skipping publish.");
+      return;
     }
     
     // Read real values from GPS
@@ -125,13 +167,21 @@ void loop() {
     float lon = 0.0;
     bool hasGpsLock = false;
     
-    if (gps.location.isValid()) {
+    // Report gpsLock=true only if satellites >= 4, hdop < 5, and location age < 5s (5000ms)
+    if (gps.location.isValid() &&
+        gps.satellites.isValid() && (gps.satellites.value() >= 4) &&
+        gps.hdop.isValid() && (gps.hdop.hdop() < 5.0) &&
+        gps.location.age() < 5000) {
       lat = gps.location.lat();
       lon = gps.location.lng();
       hasGpsLock = true;
     }
 
-    unsigned long unixTimestamp = 1690000000 + (now / 1000);
+    // Acquire synchronized real-time epoch from NTP via WiFi
+    unsigned long unixTimestamp = WiFi.getTime();
+    if (unixTimestamp == 0) {
+      unixTimestamp = 1710000000 + (now / 1000);
+    }
     
     String payload = "{";
     payload += "\"sensorId\":\"" + sensorHardwareId + "\",";
@@ -142,20 +192,9 @@ void loop() {
     payload += "\"longitude\":" + String(lon, 6) + ",";
     payload += "\"gpsLock\":" + String(hasGpsLock ? "true" : "false") + ",";
     
-    // Cryptographic Signature Generation
-    String rawData = String(DEVICE_SECRET) + sensorHardwareId + String(unixTimestamp) + String(temp, 1);
-    
-    SHA256 hash;
-    uint8_t result[32];
-    hash.reset();
-    hash.update(rawData.c_str(), rawData.length());
-    hash.finalize(result, sizeof(result));
-    
-    String sig = "0x";
-    for(int i = 0; i < 32; i++) {
-      if(result[i] < 16) sig += "0";
-      sig += String(result[i], HEX);
-    }
+    // Cryptographic Signature Generation: HMAC-SHA256 over ALL fields
+    String hmacMessage = sensorHardwareId + ":" + String(unixTimestamp) + ":" + String(temp, 1) + ":" + String(hum, 1) + ":" + String(lat, 6) + ":" + String(lon, 6) + ":" + (hasGpsLock ? "true" : "false");
+    String sig = computeHMAC(DEVICE_SECRET, hmacMessage);
     
     payload += "\"signature\": \"" + sig + "\"";
 
@@ -164,6 +203,6 @@ void loop() {
     Serial.print("Publishing message: ");
     Serial.println(payload);
     
-    client.publish("logitrust/telemetry/yashas", payload.c_str());
+    client.publish(mqtt_topic, payload.c_str());
   }
 }
